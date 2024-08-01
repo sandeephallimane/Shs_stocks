@@ -55,12 +55,12 @@ optimizer = BayesianOptimization(
     verbose=2
 )
 
-# Define a wrapper function to run the optimization in parallel
 def run_optimization():
     optimizer.maximize(init_points=1, n_iter=1)
     for res_dict in optimizer.res:
         if 'max' in res_dict:
             return res_dict['max']['target'], res_dict['max']['params']
+    return None, None  
 
 params_list = []
 results = []
@@ -72,8 +72,10 @@ results = Parallel(n_jobs=-1)(delayed(run_optimization)() for _ in range(10))
 
 # Update the optimizer with the results
 for result in results:
-    optimizer.register(params=result[1], target=result[0])
-
+    if result is not None:
+        optimizer.register(params=result[1], target=result[0])
+    else:
+        print("No result found.")
 # Get the best parameters
 best_params = optimizer.max
 
