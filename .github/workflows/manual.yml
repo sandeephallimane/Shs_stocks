@@ -26,4 +26,4 @@ jobs:
     
       - name: Generate PDF
         run: 
-          python lstm3.py
+          python test.py
