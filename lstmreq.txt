@@ -1,0 +1,17 @@
+numpy==1.26.4
+pandas
+yfinance
+scikit-optimize
+tensorflow
+statsmodels
+scikit-learn
+pmdarima
+datetime
+scipy
+Jinja2
+pdfkit
+matplotlib
+google-generativeai
+WeasyPrint
+bayesian-optimization
+joblib
