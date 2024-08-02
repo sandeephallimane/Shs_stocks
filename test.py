@@ -92,7 +92,7 @@ for _ in range(126):
 
 # Scale back the forecasted prices
 forecasted_prices = scaler.inverse_transform(np.array(forecasted).reshape(-1, 1))
-
+print('forecasted_prices:',forecasted_prices)
 # Plot forecasted prices
 plt.figure(figsize=(14, 7))
 plt.plot(data.index, data.values, label='Historical Data')
