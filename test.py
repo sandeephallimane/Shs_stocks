@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from bayes_opt import BayesianOptimization
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
+import time
 
 # Download data
 data = yf.download('TCS.NS', start='2019-01-01', end='2024-08-01')['Close']
@@ -56,8 +57,18 @@ optimizer = BayesianOptimization(
     verbose=2
 )
 
-# Run the optimization
-optimizer.maximize(init_points=5, n_iter=10)
+# Run the optimization with a timeout
+start_time = time.time()
+timeout = 60 * 60  # 1 hour
+while True:
+    try:
+        optimizer.maximize(init_points=5, n_iter=10)
+        break
+    except Exception as e:
+        print(f"Error: {e}")
+        if time.time() - start_time > timeout:
+            print("Timeout reached. Stopping optimization.")
+            break
 
 # Get the best parameters
 best_params = optimizer.max
