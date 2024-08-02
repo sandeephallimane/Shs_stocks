@@ -11,6 +11,7 @@ from bayes_opt import BayesianOptimization
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 
+# Download data
 data = yf.download('TCS.NS', start='2019-01-01', end='2024-08-01')['Close']
 
 # Prepare data
@@ -39,12 +40,12 @@ def optimize_model(lstm_units, gru_units, transformer_units, dropout_rate, regul
 
 # Define Bayesian Optimization
 pbounds = {
-    'lstm_units': (50, 100),
-    'gru_units': (20, 150),
-    'transformer_units': (50, 150),
+    'lstm_units': (50, 200),
+    'gru_units': (20, 200),
+    'transformer_units': (50, 200),
     'dropout_rate': (0.1, 0.5),
     'regularization': (0.01, 0.1),
-    'batch_size': (32, 64),
+    'batch_size': (32, 128),
     'optimizer_idx': (0, 2)
 }
 
@@ -55,27 +56,9 @@ optimizer = BayesianOptimization(
     verbose=2
 )
 
-def run_optimization():
-    optimizer.maximize(init_points=1, n_iter=1)
-    for res_dict in optimizer.res:
-        if 'max' in res_dict:
-            return res_dict['max']['target'], res_dict['max']['params']
-    return None, None  
+# Run the optimization
+optimizer.maximize(init_points=5, n_iter=10)
 
-params_list = []
-results = []
-for _ in range(10):
-    params_list.append({})
-
-# Run the optimization in parallel
-results = Parallel(n_jobs=-1)(delayed(run_optimization)() for _ in range(10))
-
-# Update the optimizer with the results
-for result in results:
-    if result is not None:
-        optimizer.register(params=result[1], target=result[0])
-    else:
-        print("No result found.")
 # Get the best parameters
 best_params = optimizer.max
 
