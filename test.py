@@ -60,7 +60,7 @@ optimizer = BayesianOptimization(
 
 # Run the optimization with a timeout
 start_time = time.time()
-timeout = 60 * 60  # 1 hour
+timeout = 30 * 60  # 1 hour
 while True:
     try:
         optimizer.maximize(init_points=5, n_iter=10)
@@ -100,4 +100,4 @@ forecast_dates = pd.date_range(start=data.index[-1] + pd.Timedelta(days=1), peri
 plt.plot(forecast_dates, forecasted_prices, label='Forecasted Data', color='red')
 plt.xlabel('Date')
 plt.ylabel('Price')
-plt.title('TCS.NS Stock Price Forecast
+plt.title('TCS.NS Stock Price Forecast')
