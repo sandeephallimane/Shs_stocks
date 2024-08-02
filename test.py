@@ -12,9 +12,8 @@ import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import time
 
-# Download data
-data = yf.download('TCS.NS', start='2019-01-01', end='2024-08-01')['Close']
-
+# Load data
+data = (yf.download('TCS.NS', start='2019-01-01', end='2024-08-01')['Close']).dropna()
 # Prepare data
 scaler = MinMaxScaler()
 scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
@@ -26,29 +25,31 @@ X, y = np.array(X), np.array(y)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Define model
-def optimize_model(lstm_units, gru_units, transformer_units, dropout_rate, regularization, batch_size, optimizer_idx):
-    optimizer = ['adam', 'rmsprop', 'sgd'][int(optimizer_idx)]
-    model = Sequential()
-    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2]), kernel_regularizer=tf.keras.regularizers.l2(regularization))))
-    model.add(Dropout(dropout_rate))
-    model.add(Bidirectional(GRU(int(gru_units), return_sequences=True, kernel_regularizer=tf.keras.regularizers.l2(regularization))))
-    model.add(Dense(1))
-    model.compile(optimizer=optimizer, loss='mean_squared_error')
-    early_stopping = EarlyStopping(monitor='val_loss', patience=5)
-    history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
-    score = model.evaluate(X_train, y_train, verbose=0)
-    return -score
+model = Sequential()
+model.add(Bidirectional(LSTM(100, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2]))))
+model.add(Dropout(0.2))
+model.add(Bidirectional(GRU(100, return_sequences=True)))
+model.add(Dense(1))
+model.compile(optimizer='adam', loss='mean_squared_error')
 
 # Define Bayesian Optimization
 pbounds = {
     'lstm_units': (50, 200),
     'gru_units': (20, 200),
-    'transformer_units': (50, 200),
     'dropout_rate': (0.1, 0.5),
-    'regularization': (0.01, 0.1),
     'batch_size': (32, 128),
     'optimizer_idx': (0, 2)
 }
+
+def optimize_model(lstm_units, gru_units, dropout_rate, batch_size, optimizer_idx):
+    model.layers[0].units = int(lstm_units)
+    model.layers[2].units = int(gru_units)
+    model.layers[1].rate = dropout_rate
+    model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5)
+    history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
+    score = model.evaluate(X_train, y_train, verbose=0)
+    return -score
 
 optimizer = BayesianOptimization(
     f=optimize_model,
@@ -74,11 +75,9 @@ while True:
 best_params = optimizer.max
 
 # Train model with best parameters
-model = Sequential()
-model.add(Bidirectional(LSTM(int(best_params['params']['lstm_units']), return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2]), kernel_regularizer=tf.keras.regularizers.l2(best_params['params']['regularization']))))
-model.add(Dropout(best_params['params']['dropout_rate']))
-model.add(Bidirectional(GRU(int(best_params['params']['gru_units']), return_sequences=True, kernel_regularizer=tf.keras.regularizers.l2(best_params['params']['regularization']))))
-model.add(Dense(1))
+model.layers[0].units = int(best_params['params']['lstm_units'])
+model.layers[2].units = int(best_params['params']['gru_units'])
+model.layers[1].rate = best_params['params']['dropout_rate']
 model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(best_params['params']['optimizer_idx'])], loss='mean_squared_error')
 early_stopping = EarlyStopping(monitor='val_loss', patience=5)
 history = model.fit(X_train, y_train, epochs=50, batch_size=int(best_params['params']['batch_size']), validation_split=0.2, callbacks=[early_stopping], verbose=0)
@@ -101,6 +100,4 @@ forecast_dates = pd.date_range(start=data.index[-1] + pd.Timedelta(days=1), peri
 plt.plot(forecast_dates, forecasted_prices, label='Forecasted Data', color='red')
 plt.xlabel('Date')
 plt.ylabel('Price')
-plt.title('JWL.NS Stock Price Forecast')
-plt.legend()
-plt.show()
+plt.title('TCS.NS Stock Price Forecast
