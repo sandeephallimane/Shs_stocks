@@ -10,3 +10,4 @@ datetime
 scipy
 matplotlib
 joblib
+optuna
