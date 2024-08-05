@@ -27,3 +27,8 @@ jobs:
       - name: Generate PDF
         run: 
           python test.py
+      - name: Upload plot as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: plot
+          path: plot.png
