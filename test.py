@@ -11,9 +11,18 @@ from bayes_opt import BayesianOptimization
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import time
+from datetime import datetime, timedelta
 
-# Load data
-data = (yf.download('TCS.NS', start='2019-01-01', end='2024-08-01')['Close']).dropna()
+current_time_ist = (datetime.now() + timedelta(hours=5, minutes=30, seconds=0)).strftime("%Y-%m-%d %H:%M:%S") 
+current_date = datetime.now().date()
+five_years_ago = current_date - timedelta(days=5 * 365)
+
+start_date = five_years_ago.strftime('%Y-%m-%d')
+end_date = current_date.strftime('%Y-%m-%d')
+current_date = datetime.now().date()
+five_years_ago = current_date - timedelta(days=5 * 365)
+
+data = (yf.download('TCS.NS', start=five_years_ago, end=current_date)['Close']).dropna()
 # Prepare data
 scaler = MinMaxScaler()
 scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
