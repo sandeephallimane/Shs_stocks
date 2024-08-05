@@ -19,10 +19,8 @@ five_years_ago = current_date - timedelta(days=5 * 365)
 
 start_date = five_years_ago.strftime('%Y-%m-%d')
 end_date = current_date.strftime('%Y-%m-%d')
-current_date = datetime.now().date()
-five_years_ago = current_date - timedelta(days=5 * 365)
 
-data = (yf.download('TCS.NS', start=five_years_ago, end=current_date)['Close']).dropna()
+data = (yf.download('TCS.NS', start=start_date, end=end_date)['Close']).dropna()
 # Prepare data
 scaler = MinMaxScaler()
 scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
