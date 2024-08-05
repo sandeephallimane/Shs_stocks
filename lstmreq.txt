@@ -13,5 +13,5 @@ pdfkit
 matplotlib
 google-generativeai
 WeasyPrint
-bayesian-optimization
+bayesian-optimization--upgrade
 joblib
