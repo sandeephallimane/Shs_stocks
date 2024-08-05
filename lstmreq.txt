@@ -9,5 +9,5 @@ pmdarima
 datetime
 scipy
 matplotlib
---upgrade bayesian-optimization
+bayesian-optimization
 joblib
