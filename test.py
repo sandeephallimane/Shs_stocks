@@ -11,19 +11,23 @@ import optuna
 import matplotlib.pyplot as plt
 
 # Load data
-current_time_ist = (pd.Timestamp.now() + pd.Timedelta(hours=5, minutes=30, seconds=0)).strftime("%Y-%m-%d %H:%M:%S") 
-current_date = pd.Timestamp.now().date()
-five_years_ago = current_date - pd.Timedelta(days=5 * 365)
-
-start_date = five_years_ago.strftime('%Y-%m-%d')
-end_date = current_date.strftime('%Y-%m-%d')
-
-data = (yf.download('TCS.NS', start=start_date, end=end_date)['Close']).dropna()
+data = yf.download('TCS.NS', period='5y')['Close'].dropna()
 
 # Prepare data
 scaler = MinMaxScaler()
 scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
 
+# Define the model
+def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx):
+    model = Sequential()
+    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(scaled_data.shape[1], 1))))
+    model.add(Dropout(dropout_rate))
+    model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
+    model.add(Dense(1))
+    model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
+    return model
+
+# Define the objective function for optimization
 def optimize_model(trial):
     lstm_units = trial.suggest_int('lstm_units', 50, 200)
     gru_units = trial.suggest_int('gru_units', 20, 200)
@@ -39,17 +43,11 @@ def optimize_model(trial):
     X, y = np.array(X), np.array(y)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    model = Sequential()
-    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2]))))
-    model.add(Dropout(dropout_rate))
-    model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
-    model.add(Dense(1))
-    model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
+    model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx)
     early_stopping = EarlyStopping(monitor='val_loss', patience=5)
     history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
 
-    y_pred = model.predict(X_test)
-    y_pred = y_pred[:, -1, :]
+    y_pred = model.predict(X_test)[:, -1, :]
     mae = np.mean(np.abs(y_test - y_pred))
     mse = np.mean((y_test - y_pred) ** 2)
     mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100
