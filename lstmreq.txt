@@ -8,10 +8,6 @@ scikit-learn
 pmdarima
 datetime
 scipy
-Jinja2
-pdfkit
 matplotlib
-google-generativeai
-WeasyPrint
-bayesian-optimization--upgrade
+--upgrade bayesian-optimization
 joblib
