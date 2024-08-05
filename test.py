@@ -109,8 +109,3 @@ plt.xlabel('Date')
 plt.ylabel('Price')
 plt.title('TCS.NS Stock Price Forecast')
 plt.savefig('plot.png')
-
-upload-artifact:
-  name: plot
-  path: plot.png
-
