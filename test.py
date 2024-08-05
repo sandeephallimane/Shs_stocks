@@ -7,12 +7,13 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Bidirectional, Dense, Dropout, GRU
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
-from bayes_opt import BayesianOptimization
+from bayes_opt import MultiObjectiveBayesianOptimization
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import time
 from datetime import datetime, timedelta
 
+# Load data
 current_time_ist = (datetime.now() + timedelta(hours=5, minutes=30, seconds=0)).strftime("%Y-%m-%d %H:%M:%S") 
 current_date = datetime.now().date()
 five_years_ago = current_date - timedelta(days=5 * 365)
@@ -21,6 +22,7 @@ start_date = five_years_ago.strftime('%Y-%m-%d')
 end_date = current_date.strftime('%Y-%m-%d')
 
 data = (yf.download('TCS.NS', start=start_date, end=end_date)['Close']).dropna()
+
 # Prepare data
 scaler = MinMaxScaler()
 scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
@@ -59,18 +61,17 @@ def optimize_model(lstm_units, gru_units, dropout_rate, batch_size, optimizer_id
     r2 = 1 - (np.sum((y_test - y_pred) ** 2) / np.sum((y_test - np.mean(y_test)) ** 2))
 
     return {
-        'loss': -mae,
+        'mae': mae,
         'mse': mse,
         'mape': mape,
         'r2': r2
     }
 
-optimizer = BayesianOptimization(
+optimizer = MultiObjectiveBayesianOptimization(
     f=optimize_model,
     pbounds=pbounds,
     random_state=0,
     verbose=2,
-    multi_objective=True,
     objectives=[
         {'name': 'mae', 'type': 'minimize', 'goal': 0.0},
         {'name': 'mse', 'type': 'minimize', 'goal': 0.0},
@@ -94,6 +95,8 @@ while True:
 
 # Get the best parameters
 best_params = optimizer.max
+print('Best parameters:', best_params['params'])
+print('Best objective values:', best_params['values'])
 
 # Train model with best parameters
 X, y = [], []
