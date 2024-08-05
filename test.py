@@ -32,7 +32,7 @@ pbounds = {
     'dropout_rate': (0.1, 0.5),
     'batch_size': (32, 128),
     'optimizer_idx': (0, 2),
-    'window_size': (100, 250)
+    'window_size': (120, 150)
 }
 
 def optimize_model(lstm_units, gru_units, dropout_rate, batch_size, optimizer_idx, window_size):
@@ -51,14 +51,32 @@ def optimize_model(lstm_units, gru_units, dropout_rate, batch_size, optimizer_id
     model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
     early_stopping = EarlyStopping(monitor='val_loss', patience=5)
     history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
-    score = model.evaluate(X_test, y_test, verbose=0)
-    return -score
+
+    y_pred = model.predict(X_test)
+    mae = np.mean(np.abs(y_test - y_pred))
+    mse = np.mean((y_test - y_pred) ** 2)
+    mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100
+    r2 = 1 - (np.sum((y_test - y_pred) ** 2) / np.sum((y_test - np.mean(y_test)) ** 2))
+
+    return {
+        'loss': -mae,
+        'mse': mse,
+        'mape': mape,
+        'r2': r2
+    }
 
 optimizer = BayesianOptimization(
     f=optimize_model,
     pbounds=pbounds,
     random_state=0,
-    verbose=2
+    verbose=2,
+    multi_objective=True,
+    objectives=[
+        {'name': 'mae', 'type': 'minimize', 'goal': 0.0},
+        {'name': 'mse', 'type': 'minimize', 'goal': 0.0},
+        {'name': 'mape', 'type': 'minimize', 'goal': 0.0},
+        {'name': 'r2', 'type': 'maximize', 'goal': 1.0}
+    ]
 )
 
 # Run the optimization with a timeout
@@ -92,8 +110,9 @@ model.add(Bidirectional(GRU(int(best_params['params']['gru_units']), return_sequ
 model.add(Dense(1))
 model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(best_params['params']['optimizer_idx'])], loss='mean_squared_error')
 early_stopping = EarlyStopping(monitor='val_loss', patience=5)
-history = model.fit(X_train, y_train, epochs=50, batch_size=int(best_params['params']['batch_size']), 
-                    validation_split=0.2, callbacks=[early_stopping], verbose=0)
+history = model.fit(X_train, y_train, epochs=50, batch_size=int(best_params['params']['batch_size']), validation_split=0.2, callbacks=[early_stopping], verbose=0)
+
+# Forecast
 forecasted = []
 current_data = scaled_data[-int(best_params['params']['window_size']):]
 for _ in range(126):
