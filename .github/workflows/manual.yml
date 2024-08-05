@@ -4,9 +4,8 @@ on:
   workflow_dispatch:
   #schedule:
    # - cron: '45 0 * * 6'
-
 jobs:
-  build:
+  upload-plot:
     runs-on: macos-latest
 
     steps:
