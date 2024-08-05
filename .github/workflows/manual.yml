@@ -18,7 +18,7 @@ jobs:
           python-version: '3.9'  
       - name: Execute Python dependency
         run: |
-         python -m pip uninstall -r lstmreq.txt &&
+         python -m pip uninstall -r req.txt &&
          python -m pip cache purge &&
          python -m pip install --upgrade pip setuptools &&
          python -m pip install -r lstmreq.txt
