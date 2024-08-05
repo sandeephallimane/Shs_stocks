@@ -57,43 +57,34 @@ def optimize_model(trial):
 
     return mae, mse, mape, r2
 
+# Perform optimization
 study = optuna.create_study(directions=['minimize', 'minimize', 'minimize', 'maximize'])
 study.optimize(optimize_model, n_trials=20)
 
-best_trial = study.best_trial
-print('Best parameters:', best_trial.params)
-print('Best objective values:', best_trial.values)
+# Get the best trials
+best_trials = study.best_trials
 
-# Train model with best parameters
+# Train the best model
+best_trial = best_trials[0]  # Select the first best trial
+best_model = create_model(**best_trial.params)
 X, y = [], []
 for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
     X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
     y.append(scaled_data[i + int(best_trial.params['window_size'])])
 X, y = np.array(X), np.array(y)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-model = Sequential()
-model.add(Bidirectional(LSTM(int(best_trial.params['lstm_units']), return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2]))))
-model.add(Dropout(best_trial.params['dropout_rate']))
-model.add(Bidirectional(GRU(int(best_trial.params['gru_units']), return_sequences=True)))
-model.add(Dense(1))
-model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(best_trial.params['optimizer_idx'])], loss='mean_squared_error')
-early_stopping = EarlyStopping(monitor='val_loss', patience=5)
-history = model.fit(X_train, y_train, epochs=50, batch_size=int(best_trial.params['batch_size']), validation_split=0.2, callbacks=[early_stopping], verbose=0)
+best_model.fit(X_train, y_train, epochs=50, batch_size=int(best_trial.params['batch_size']), validation_split=0.2, verbose=0)
 
 # Forecast
 forecasted = []
 current_data = scaled_data[-int(best_trial.params['window_size']):]
 for _ in range(126):
-    prediction = model.predict(current_data.reshape(1, int(best_trial.params['window_size']), 1))[0, 0]
-    forecasted.append(prediction)
-    current_data = np.append(current_data[1:], prediction)
-
-# Scale back the forecasted prices
-forecasted_prices = scaler.inverse_transform(np.array(forecasted).reshape(-1, 1))
-print('Forecasted prices:', forecasted_prices)
+    prediction = best_model.predict(current_data.reshape(1, int(best_trial.params['window_size']), 1))[:, -1, :]
+    forecasted.append(prediction[0, 0])
+    current_data = np.append(current_data[1:], prediction[0, 0])
 
 # Plot forecasted prices
+forecasted_prices = scaler.inverse_transform(np.array(forecasted).reshape(-1, 1))
 plt.figure(figsize=(14, 7))
 plt.plot(data.index, data.values, label='Historical Data')
 forecast_dates = pd.date_range(start=data.index[-1] + pd.Timedelta(days=1), periods=126)
