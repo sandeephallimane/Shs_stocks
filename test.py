@@ -49,6 +49,7 @@ def optimize_model(trial):
     history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
 
     y_pred = model.predict(X_test)
+    y_pred = y_pred[:, -1, :]
     mae = np.mean(np.abs(y_test - y_pred))
     mse = np.mean((y_test - y_pred) ** 2)
     mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100
