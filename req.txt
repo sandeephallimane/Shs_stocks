@@ -1,0 +1,13 @@
+numpy==1.26.4
+pandas
+yfinance
+scikit-optimize
+tensorflow
+statsmodels
+scikit-learn
+pmdarima
+datetime
+scipy
+matplotlib
+bayesian-optimization
+joblib
