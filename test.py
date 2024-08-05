@@ -84,7 +84,7 @@ start_time = time.time()
 timeout = 30 * 60  # 1 hour
 while True:
     try:
-        optimizer.maximize(init_points=5, n_iter=10)
+        optimizer.maximize(init_points=5, n_iter=20)
         break
     except Exception as e:
         print(f"Error: {e}")
