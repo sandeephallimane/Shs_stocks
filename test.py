@@ -9,18 +9,12 @@ from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 import optuna
 import matplotlib.pyplot as plt
-import sqlite3
 import os
 
 def delete_all_studies():
-    for filename in os.listdir("."):
-        if filename.endswith("_study.db"):
-            conn = sqlite3.connect(filename)
-            c = conn.cursor()
-            c.execute("DELETE FROM studies")
-            conn.commit()
-            conn.close()
-            os.remove(filename)
+    db_file = 'optuna.db'  # or your custom database file
+    if os.path.exists(db_file):
+        os.remove(db_file)
             
 def optimize_model(trial):
     lstm_units = trial.suggest_int('lstm_units', 50, 200)
