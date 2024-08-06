@@ -1,5 +1,3 @@
-Here's the updated code with vectorization, improved hyperparameter tuning, and additional model evaluation metrics:
-Python
 import yfinance as yf
 import pandas as pd
 import numpy as np
