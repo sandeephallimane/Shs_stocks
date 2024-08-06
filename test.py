@@ -65,7 +65,7 @@ study = optuna.create_study(directions=['minimize', 'minimize', 'minimize', 'min
                             storage=storage,
                             load_if_exists=True)
 
-n_jobs = 4
+n_jobs = -1
 
 # Optimize study in parallel
 study.optimize(optimize_model, n_trials=50, n_jobs=n_jobs)
