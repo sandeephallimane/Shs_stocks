@@ -9,8 +9,19 @@ from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 import optuna
 import matplotlib.pyplot as plt
+import sqlite3
+import os
 
-
+def delete_all_studies():
+    for filename in os.listdir("."):
+        if filename.endswith("_study.db"):
+            conn = sqlite3.connect(filename)
+            c = conn.cursor()
+            c.execute("DELETE FROM studies")
+            conn.commit()
+            conn.close()
+            os.remove(filename)
+            
 def optimize_model(trial):
     lstm_units = trial.suggest_int('lstm_units', 50, 200)
     gru_units = trial.suggest_int('gru_units', 20, 200)
@@ -50,7 +61,7 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
 tickers = ['TCS.NS','INFY.NS']
 
 def new_lstm(ti):
-  optuna.delete_studies()
+  delete_all_studies()
   script_name= ti
   study_name = script_name + '_study'
   storage = 'sqlite:///' + script_name + '_study.db'
