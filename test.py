@@ -18,7 +18,7 @@ scaler = MinMaxScaler()
 scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
 
 # Define the model
-def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx):
+def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size):
     model = Sequential()
     model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(scaled_data.shape[1], 1))))
     model.add(Dropout(dropout_rate))
