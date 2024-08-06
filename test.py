@@ -10,14 +10,10 @@ from sklearn.model_selection import train_test_split
 import optuna
 import matplotlib.pyplot as plt
 
-# Load data
 data = yf.download('TCS.NS', period='5y')['Close'].dropna()
-
-# Prepare data
 scaler = MinMaxScaler()
 scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
 
-# Define the model
 def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size):
     model = Sequential()
     model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(scaled_data.shape[1], 1))))
@@ -27,7 +23,6 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size)
     model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
     return model
 
-# Define the objective function for optimization
 def optimize_model(trial):
     lstm_units = trial.suggest_int('lstm_units', 50, 200)
     gru_units = trial.suggest_int('gru_units', 20, 200)
@@ -50,7 +45,7 @@ def optimize_model(trial):
     y_pred = model.predict(X_test)[:, -1, :]
     mae = np.mean(np.abs(y_test - y_pred))
     mse = np.mean((y_test - y_pred) ** 2)
-    mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100
+    mape = np.where(y_test != 0, np.mean(np.abs((y_test - y_pred) / y_test)) * 100, 100)
     r2 = 1 - (np.sum((y_test - y_pred) ** 2) / np.sum((y_test - np.mean(y_test)) ** 2))
 
     return mae, mse, mape, r2
