@@ -11,3 +11,4 @@ scipy
 matplotlib
 joblib
 optuna
+sqlite3
