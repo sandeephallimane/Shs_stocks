@@ -16,7 +16,15 @@ def delete_all_studies():
     if os.path.exists(db_file):
         os.remove(db_file)
             
-def optimize_model(trial):
+
+tickers = ['TCS.NS','INFY.NS']
+
+def new_lstm(ti):
+  delete_all_studies()
+  script_name= ti
+  study_name = script_name + '_study'
+  storage = 'sqlite:///' + script_name + '_study.db'
+  def optimize_model(trial):
     lstm_units = trial.suggest_int('lstm_units', 50, 200)
     gru_units = trial.suggest_int('gru_units', 20, 200)
     dropout_rate = trial.suggest_uniform('dropout_rate', 0.1, 0.5)
@@ -43,22 +51,15 @@ def optimize_model(trial):
     r2 = 1 - (np.sum((y_test - y_pred) ** 2) / np.sum((y_test - np.mean(y_test)) ** 2))
     return mae, mse, rmse, mape, r2
     
-def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
-    model = Sequential()
-    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
-    model.add(Dropout(dropout_rate))
-    model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
-    model.add(Dense(1))
-    model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
-    return model
+  def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
+      model = Sequential()
+      model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
+      model.add(Dropout(dropout_rate))
+      model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
+      model.add(Dense(1))
+      model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
+      return model
 
-tickers = ['TCS.NS','INFY.NS']
-
-def new_lstm(ti):
-  delete_all_studies()
-  script_name= ti
-  study_name = script_name + '_study'
-  storage = 'sqlite:///' + script_name + '_study.db'
   data = yf.download(script_name, period='5y')['Close'].dropna()
   scaler = MinMaxScaler()
   scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
