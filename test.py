@@ -8,10 +8,9 @@ from tensorflow.keras.layers import LSTM, Bidirectional, Dense, Dropout, GRU
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 import optuna
-from hyperband import Hyperband
 import matplotlib.pyplot as plt
 
-script_name = 'TCS.NS'
+script_name= 'TCS.NS'
 study_name = script_name + '_study'
 storage = 'sqlite:///' + script_name + '_study.db'
 
@@ -32,8 +31,8 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
     model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
     return model
 
-# Define Hyperband optimization
-def objective(trial):
+# Define optimization function
+def optimize_model(trial):
     lstm_units = trial.suggest_int('lstm_units', 50, 200)
     gru_units = trial.suggest_int('gru_units', 20, 200)
     dropout_rate = trial.suggest_uniform('dropout_rate', 0.1, 0.5)
@@ -58,19 +57,24 @@ def objective(trial):
     rmse = np.sqrt(mse)
     mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100 if y_test.all() != 0 else 100
     r2 = 1 - (np.sum((y_test - y_pred) ** 2) / np.sum((y_test - np.mean(y_test)) ** 2))
+    return mae, mse, rmse, mape, r2
 
-    return [mae, mse, rmse, mape, -r2]  # Note the negative sign for R2 (maximize)
+# Create study with parallelization
+study = optuna.create_study(directions=['minimize', 'minimize', 'minimize', 'minimize', 'maximize'],
+                            study_name=study_name,
+                            storage=storage,
+                            load_if_exists=True)
 
-# Create Hyperband object
-hb = Hyperband(objective, max_iter=50, eta=3, resource={'lstm_units': 200, 'gru_units': 200})
+n_jobs = 4
 
-# Perform optimization
-results = hb.run()
+# Optimize study in parallel
+study.optimize(optimize_model, n_trials=50, n_jobs=n_jobs)
 
-# Get best trial
-best_trial = results.best_trial
+# Get best trials
+best_trials = study.best_trials
 
 # Train best model
+best_trial = best_trials[0]
 best_model = create_model(**best_trial.params)
 X, y = [], []
 for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
