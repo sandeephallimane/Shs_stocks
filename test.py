@@ -45,9 +45,8 @@ def optimize_model(trial):
     y_pred = model.predict(X_test)[:, -1, :]
     mae = np.mean(np.abs(y_test - y_pred))
     mse = np.mean((y_test - y_pred) ** 2)
-    mape = np.where(y_test != 0, np.mean(np.abs((y_test - y_pred) / y_test)) * 100, 100)
+    mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100 if y_test.all() != 0 else 100    
     r2 = 1 - (np.sum((y_test - y_pred) ** 2) / np.sum((y_test - np.mean(y_test)) ** 2))
-
     return mae, mse, mape, r2
 
 # Perform optimization
