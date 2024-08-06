@@ -94,6 +94,7 @@ for _ in range(126):
 
 # Plot forecasted prices
 forecasted_prices = scaler.inverse_transform(np.array(forecasted).reshape(-1, 1))
+print("forecasted_prices:",forecasted_prices)
 plt.figure(figsize=(14, 7))
 plt.plot(data.index, data.values, label='Historical Data')
 forecast_dates = pd.date_range(start=data.index[-1] + pd.Timedelta(days=1), periods=126)
