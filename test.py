@@ -25,7 +25,7 @@ def new_lstm(ti):
     study_name = script_name + '_study'
     storage = 'sqlite:///' + script_name + '_study.db'
 
-    def optimize_model(trial):
+    def optimize_model(trial, scaled_data):
       lstm_units = trial.suggest_int('lstm_units', 50, 200)
       gru_units = trial.suggest_int('gru_units', 20, 200)
       dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
@@ -48,7 +48,7 @@ def new_lstm(ti):
          early_stopping = EarlyStopping(monitor='val_loss', patience=5)
          history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
          y_pred = model.predict(X_val)[:, -1, :]
-         scores = evaluate_model(y_val, y_pred)
+         scores = evaluate_model(y_val, y_pred, model)
          cv_scores.append(scores)
 
       avg_scores = np.mean(cv_scores, axis=0)
@@ -66,7 +66,7 @@ def new_lstm(ti):
              }
       return metrics
 
-    def evaluate_model(y_val, y_pred):
+    def evaluate_model(y_val, y_pred, model):
         mae = np.mean(np.abs(y_val - y_pred))
         mse = np.mean((y_val[:, -1] - y_pred[:, -1]) ** 2)
         rmse = np.sqrt(mse)
