@@ -30,7 +30,7 @@ def new_lstm(ti):
     def optimize_model(trial):
         lstm_units = trial.suggest_int('lstm_units', 50, 200)
         gru_units = trial.suggest_int('gru_units', 20, 200)
-        dropout_rate = trial.suggest_uniform('dropout_rate', 0.1, 0.5)
+        dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
         batch_size = trial.suggest_int('batch_size', 32, 128)
         optimizer_idx = trial.suggest_int('optimizer_idx', 0, 2)
         window_size = trial.suggest_int('window_size', 100, 200)
