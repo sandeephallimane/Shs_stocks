@@ -14,15 +14,13 @@ import matplotlib.pyplot as plt
 import os
 from sklearn.model_selection import TimeSeriesSplit
 
-def delete_all_studies():
-    db_file = 'optuna.db'  # or your custom database file
-    if os.path.exists(db_file):
-        os.remove(db_file)
 
 tickers = ['TCS.NS','INFY.NS']
 
 def new_lstm(ti):
-    delete_all_studies()
+    for filename in os.listdir():
+        if filename.endswith('_study.db'):
+            os.remove(filename)
     script_name= ti
     study_name = script_name + '_study'
     storage = 'sqlite:///' + script_name + '_study.db'
@@ -52,16 +50,19 @@ def new_lstm(ti):
             history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
 
             y_pred = model.predict(X_val)[:, -1, :]
-            mae = np.mean(np.abs(y_val[:, -1, :] - y_pred[:, -1, :]))
-            mse = np.mean((y_val[:, -1, :] - y_pred[:, -1, :]) ** 2)
+            mae = np.mean(np.abs(y_val - y_pred))
+            mse = np.mean((y_val[:, -1] - y_pred[:, -1]) ** 2)
             rmse = np.sqrt(mse)
             mape = np.mean(np.abs((y_val - y_pred) / y_val)) * 100 if y_val.all() != 0 else 100
             r2 = 1 - (np.sum((y_val - y_pred) ** 2) / np.sum((y_val - np.mean(y_val)) ** 2))
-            ic = np.corrcoef(y_val, y_pred)[0, 1]
+            if y_val.shape[1] > 1 and y_pred.shape[1] > 1:
+               ic = np.corrcoef(y_val[:, -1, :], y_pred[:, -1, :])[0, 1]
+            else:
+               ic = 0
             msle = np.mean((np.log(y_val + 1) - np.log(y_pred + 1)) ** 2)
             mfe = np.mean(y_val - y_pred)
             mad = np.mean(np.abs(y_val - y_pred))
-            aic = 2 * (len(model.layers) + 1) - 2 * np.log(np.mean(mse))
+            aic = 2 * (len(model.layers) + 1) - 2 * np.log(mse)
 
             cv_scores.append([mae, mse, rmse, mape, r2, ic, msle, mfe, mad, aic])
 
