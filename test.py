@@ -67,7 +67,7 @@ def new_lstm(ti):
             cv_scores.append([mae, mse, rmse, mape, r2, ic, msle, mfe, mad, aic])
 
         avg_scores = np.mean(cv_scores, axis=0)
-        return avg_scores
+        return avg_scores[1]
 
     def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
         model = Sequential()
