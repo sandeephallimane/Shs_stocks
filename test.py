@@ -64,7 +64,7 @@ def new_lstm(ti):
         'mad': avg_scores[8],
         'aic': avg_scores[9]
              }
-    return metrics
+      return metrics
 
     def evaluate_model(y_val, y_pred):
         mae = np.mean(np.abs(y_val - y_pred))
@@ -80,7 +80,7 @@ def new_lstm(ti):
         mfe = np.mean(y_val - y_pred)
         mad = np.mean(np.abs(y_val - y_pred))
         aic = 2 * (len(model.layers) + 1) - 2 * np.log(mse)
-    return [mae, mse, rmse, mape, r2, ic, msle, mfe, mad, aic]
+        return [mae, mse, rmse, mape, r2, ic, msle, mfe, mad, aic]
     
     def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
         model = Sequential()
