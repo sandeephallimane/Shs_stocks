@@ -67,8 +67,19 @@ def new_lstm(ti):
             cv_scores.append([mae, mse, rmse, mape, r2, ic, msle, mfe, mad, aic])
 
         avg_scores = np.mean(cv_scores, axis=0)
-        return avg_scores[1]
-
+        metrics = {
+           'mae': avg_scores[0],
+           'mse': avg_scores[1],
+           'rmse': avg_scores[2],
+           'mape': avg_scores[3],
+           'r2': avg_scores[4],
+           'ic': avg_scores[5],
+           'msle': avg_scores[6],
+           'mfe': avg_scores[7],
+           'mad': avg_scores[8],
+           'aic': avg_scores[9]
+                 }
+        return metrics
     def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
         model = Sequential()
         model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
