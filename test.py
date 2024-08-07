@@ -58,13 +58,12 @@ def new_lstm(ti):
             mape = np.mean(np.abs((y_val - y_pred) / y_val)) * 100 if y_val.all() != 0 else 100
             r2 = 1 - (np.sum((y_val - y_pred) ** 2) / np.sum((y_val - np.mean(y_val)) ** 2))
             ic = np.corrcoef(y_val, y_pred)[0, 1]
-            auc_roc = tf.keras.metrics.AUC(y_val, y_pred)
             msle = np.mean((np.log(y_val + 1) - np.log(y_pred + 1)) ** 2)
             mfe = np.mean(y_val - y_pred)
             mad = np.mean(np.abs(y_val - y_pred))
             aic = 2 * (len(model.layers) + 1) - 2 * np.log(np.mean(mse))
 
-            cv_scores.append([mae, mse, rmse, mape, r2, ic, auc_roc, msle, mfe, mad, aic])
+            cv_scores.append([mae, mse, rmse, mape, r2, ic, msle, mfe, mad, aic])
 
         avg_scores = np.mean(cv_scores, axis=0)
         return avg_scores
@@ -82,7 +81,7 @@ def new_lstm(ti):
     scaler = MinMaxScaler()
     scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
     n_jobs = 5
-    study = optuna.create_study(directions=['minimize', 'minimize', 'minimize', 'minimize', 'maximize', 'maximize', 'maximize', 'minimize', 'minimize', 'minimize', 'minimize'],
+    study = optuna.create_study(directions=['minimize', 'minimize', 'minimize', 'minimize', 'maximize', 'maximize', 'minimize', 'minimize', 'minimize', 'minimize'],
                             study_name=study_name,
                             storage=storage,
                             load_if_exists=True,
