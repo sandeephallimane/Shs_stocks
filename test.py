@@ -17,8 +17,9 @@ tickers = ['TCS.NS','INFY.NS']
 
 def stk_dt(tk,scaler):
    data = yf.download(tk, period='5y')['Close'].dropna()
+   last_date = data.index[-1].to_pydatetime().date()
    scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
-   return scaled_data
+   return scaled_data,last_date
 
 def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
     model = Sequential()
@@ -61,7 +62,7 @@ def optimize_model(trial,scaled_data):
     mfe = np.mean((y_test - y_pred) / y_test) * 100 if y_test.all() != 0 else 100
     return mae, mse, rmse, mape, r2, ic, aic, msle, mad, mfe
    
-def new_lstm(ti, scaled_data, scaler):
+def new_lstm(ti, scaled_data, scaler,lst):
     for filename in os.listdir():
         if filename.endswith('_study.db'):
             os.remove(filename)
@@ -82,7 +83,7 @@ def new_lstm(ti, scaled_data, scaler):
     X, y = np.array(X), np.array(y)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     best_model.fit(X_train, y_train, epochs=50, batch_size=int(best_trial.params['batch_size']), validation_split=0.2, verbose=0)
-    last_date = scaled_data.index[-1]
+    last_date = lst
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
     forecasted_prices = []
     current_data = scaled_data[-int(best_trial.params['window_size']):]
@@ -95,7 +96,7 @@ def new_lstm(ti, scaled_data, scaler):
 
 for t in tickers:
     scaler = MinMaxScaler()
-    scaled_data = stk_dt(t,scaler)
-    f = new_lstm(t, scaled_data, scaler)
+    scaled_data,lst = stk_dt(t,scaler)
+    f = new_lstm(t, scaled_data, scaler,lst)
     print("Stock name:", t)
     print("Forecasted prices:", f)
