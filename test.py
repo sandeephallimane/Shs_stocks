@@ -17,45 +17,45 @@ from sklearn.model_selection import TimeSeriesSplit
 tickers = ['TCS.NS','INFY.NS']
 
 def stk_dt(tk,scaler):
-  data = yf.download(tk, period='5y')['Close'].dropna()
-  scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
-  return scaled_data
+   data = yf.download(tk, period='5y')['Close'].dropna()
+   scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
+   return scaled_data
+
 def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
-        model = Sequential()
-        model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
-        model.add(Dropout(dropout_rate))
-        model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
-        model.add(Dense(1))
-        model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
-        return model
+    model = Sequential()
+    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
+    model.add(Dropout(dropout_rate))
+    model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
+    model.add(Dense(1))
+    model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
+    return model
+  
 def optimize_model(trial, scaled_data):
-      lstm_units = trial.suggest_int('lstm_units', 50, 200)
-      gru_units = trial.suggest_int('gru_units', 20, 200)
-      dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
-      batch_size = trial.suggest_int('batch_size', 32, 128)
-      optimizer_idx = trial.suggest_int('optimizer_idx', 0, 2)
-      window_size = trial.suggest_int('window_size', 100, 200)
+    lstm_units = trial.suggest_int('lstm_units', 50, 200)
+    gru_units = trial.suggest_int('gru_units', 20, 200)
+    dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
+    batch_size = trial.suggest_int('batch_size', 32, 128)
+    optimizer_idx = trial.suggest_int('optimizer_idx', 0, 2)
+    window_size = trial.suggest_int('window_size', 100, 200)
+    X, y = [], []
+    for i in range(len(scaled_data) - int(window_size)):
+        X.append(scaled_data[i:i + int(window_size)])
+        y.append(scaled_data[i + int(window_size)])
+    X, y = np.array(X), np.array(y)
+    tscv = TimeSeriesSplit(n_splits=5)
+    cv_scores = []
+    for train_index, val_index in tscv.split(X):
+        X_train, X_val = X[train_index], X[val_index]
+        y_train, y_val = y[train_index], y[val_index]
+        model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size)
+        early_stopping = EarlyStopping(monitor='val_loss', patience=5)
+        history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
+        y_pred = model.predict(X_val)[:, -1, :]
+        scores = evaluate_model(y_val, y_pred, model)
+        cv_scores.append(scores)
 
-      X, y = [], []
-      for i in range(len(scaled_data) - int(window_size)):
-          X.append(scaled_data[i:i + int(window_size)])
-          y.append(scaled_data[i + int(window_size)])
-      X, y = np.array(X), np.array(y)
-      tscv = TimeSeriesSplit(n_splits=5)
-
-      cv_scores = []
-      for train_index, val_index in tscv.split(X):
-         X_train, X_val = X[train_index], X[val_index]
-         y_train, y_val = y[train_index], y[val_index]
-         model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size)
-         early_stopping = EarlyStopping(monitor='val_loss', patience=5)
-         history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
-         y_pred = model.predict(X_val)[:, -1, :]
-         scores = evaluate_model(y_val, y_pred, model)
-         cv_scores.append(scores)
-
-      avg_scores = np.mean(cv_scores, axis=0)
-      metrics = {
+    avg_scores = np.mean(cv_scores, axis=0)
+    metrics = {
         'mae': avg_scores[0],
         'mse': avg_scores[1],
         'rmse': avg_scores[2],
@@ -67,7 +67,8 @@ def optimize_model(trial, scaled_data):
         'mad': avg_scores[8],
         'aic': avg_scores[9]
              }
-      return metrics
+    return metrics
+  
 def evaluate_model(y_val, y_pred, model):
   mae = np.mean(np.abs(y_val - y_pred))
   mse = np.mean((y_val[:, -1] - y_pred[:, -1]) ** 2)
