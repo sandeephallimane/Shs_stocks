@@ -29,62 +29,39 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
     model.add(Dense(1))
     model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
     return model
-
-def optimize_model(trial, scaled_data):
+   
+def optimize_model(trial):
     lstm_units = trial.suggest_int('lstm_units', 50, 200)
     gru_units = trial.suggest_int('gru_units', 20, 200)
-    dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
+    dropout_rate = trial.suggest_uniform('dropout_rate', 0.1, 0.5)
     batch_size = trial.suggest_int('batch_size', 32, 128)
     optimizer_idx = trial.suggest_int('optimizer_idx', 0, 2)
-    window_size = trial.suggest_int('window_size', 100, 200)
+    window_size = trial.suggest_int('window_size', 120, 150)
+
     X, y = [], []
     for i in range(len(scaled_data) - int(window_size)):
         X.append(scaled_data[i:i + int(window_size)])
         y.append(scaled_data[i + int(window_size)])
     X, y = np.array(X), np.array(y)
-    tscv = TimeSeriesSplit(n_splits=5)
-    cv_scores = []
-    for train_index, val_index in tscv.split(X):
-        X_train, X_val = X[train_index], X[val_index]
-        y_train, y_val = y[train_index], y[val_index]
-        model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size)
-        early_stopping = EarlyStopping(monitor='val_loss', patience=5)
-        history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
-        y_pred = model.predict(X_val)[:, -1, :]
-        scores = evaluate_model(y_val, y_pred, model)
-        cv_scores.append(scores)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    avg_scores = np.mean(cv_scores, axis=0)
-    metrics = {
-        'mae': avg_scores[0],
-        'mse': avg_scores[1],
-        'rmse': avg_scores[2],
-        'mape': avg_scores[3],
-        'r2': avg_scores[4],
-        'ic': avg_scores[5],
-        'msle': avg_scores[6],
-        'mfe': avg_scores[7],
-        'mad': avg_scores[8],
-        'aic': avg_scores[9]
-             }
-    return avg_scores
-  
-def evaluate_model(y_val, y_pred, model):
-  mae = np.mean(np.abs(y_val - y_pred))
-  mse = np.mean((y_val[:, -1] - y_pred[:, -1]) ** 2)
-  rmse = np.sqrt(mse)
-  mape = np.mean(np.abs((y_val - y_pred) / y_val)) * 100 if y_val.all() != 0 else 100
-  r2 = 1 - (np.sum((y_val - y_pred) ** 2) / np.sum((y_val - np.mean(y_val)) ** 2))
-  if y_val.shape[1] > 1 and y_pred.shape[1] > 1:
-    ic = np.corrcoef(y_val[:, -1, :], y_pred[:, -1, :])[0, 1]
-  else:
-    ic = 0.0
-  msle = np.mean((np.log(y_val + 1) - np.log(y_pred + 1)) ** 2)
-  mfe = np.mean(y_val - y_pred)
-  mad = np.mean(np.abs(y_val - y_pred))
-  aic = 2 * (len(model.layers) + 1) - 2 * np.log(mse)
-  return [mae, mse, rmse, mape, r2, ic, msle, mfe, mad, aic]
-    
+    model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5)
+    history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
+
+    y_pred = model.predict(X_test)[:, -1, :]
+    mae = np.mean(np.abs(y_test - y_pred))
+    mse = np.mean((y_test - y_pred) ** 2)
+    rmse = np.sqrt(mse)
+    mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100 if y_test.all() != 0 else 100    
+    r2 = 1 - (np.sum((y_test - y_pred) ** 2) / np.sum((y_test - np.mean(y_test)) ** 2))
+    ic = np.corrcoef(y_test.flatten(), y_pred.flatten())[0, 1]
+    aic = len(y_test) * np.log(mse) + 2 * model.count_params()
+    msle = np.mean((np.log(y_test + 1) - np.log(y_pred + 1)) ** 2)
+    mad = np.mean(np.abs(y_test - y_pred))
+    mfe = np.mean((y_test - y_pred) / y_test) * 100 if y_test.all() != 0 else 100
+    return mae, mse, rmse, mape, r2, ic, aic, msle, mad, mfe
+   
 def new_lstm(ti, scaled_data, scaler):
     for filename in os.listdir():
         if filename.endswith('_study.db'):
@@ -93,11 +70,8 @@ def new_lstm(ti, scaled_data, scaler):
     study_name = script_name + '_study'
     storage = 'sqlite:///' + script_name + '_study.db'
     
-    study = optuna.create_study(directions=['minimize', 'minimize', 'minimize', 'minimize', 'maximize', 'maximize', 'minimize', 'minimize', 'minimize', 'minimize'],
-                            study_name=study_name,
-                            storage=storage,
-                            load_if_exists=True,
-                            sampler=TPESampler())
+    study = optuna.create_study(directions=['minimize', 'minimize', 'minimize', 'minimize', 'maximize','maximize', 'minimize', 'minimize', 'minimize', 'minimize'],
+                            study_name=study_name,storage=storage,load_if_exists=True,sampler=TPESampler())
     study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=2, n_jobs=-1)
     best_trials = study.best_trials
     best_trial = best_trials[0]
