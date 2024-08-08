@@ -67,7 +67,7 @@ def optimize_model(trial, scaled_data):
         'mad': avg_scores[8],
         'aic': avg_scores[9]
              }
-    return metrics
+    return avg_scores
   
 def evaluate_model(y_val, y_pred, model):
   mae = np.mean(np.abs(y_val - y_pred))
@@ -92,15 +92,13 @@ def new_lstm(ti, scaled_data, scaler):
     script_name= ti
     study_name = script_name + '_study'
     storage = 'sqlite:///' + script_name + '_study.db'
-    def callback(study, trial):
-        metrics = trial.value
-        print(f"Trial {trial.number} metrics: {metrics}")
+    
     study = optuna.create_study(directions=['minimize', 'minimize', 'minimize', 'minimize', 'maximize', 'maximize', 'minimize', 'minimize', 'minimize', 'minimize'],
                             study_name=study_name,
                             storage=storage,
                             load_if_exists=True,
                             sampler=TPESampler())
-    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=2, n_jobs=-1, callbacks=[callback])
+    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=2, n_jobs=-1)
     best_trials = study.best_trials
     best_trial = best_trials[0]
     best_model = create_model(**best_trial.params)
