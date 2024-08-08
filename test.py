@@ -10,7 +10,6 @@ from sklearn.model_selection import train_test_split
 import optuna
 from optuna.samplers import TPESampler
 from sklearn.linear_model import LinearRegression
-import matplotlib.pyplot as plt
 import os
 from sklearn.model_selection import TimeSeriesSplit
 
@@ -30,7 +29,7 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
     model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
     return model
    
-def optimize_model(trial):
+def optimize_model(trial,scaled_data):
     lstm_units = trial.suggest_int('lstm_units', 50, 200)
     gru_units = trial.suggest_int('gru_units', 20, 200)
     dropout_rate = trial.suggest_uniform('dropout_rate', 0.1, 0.5)
