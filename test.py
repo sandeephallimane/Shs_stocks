@@ -98,7 +98,7 @@ def new_lstm(ti, scaled_data, scaler):
                             storage=storage,
                             load_if_exists=True,
                             sampler=TPESampler())
-    study.optimize(optimize_model, n_trials=20, n_jobs=n_jobs, scaled_data=scaled_data)
+    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=20, n_jobs=n_jobs)
     best_trials = study.best_trials
     best_trial = best_trials[0]
     best_model = create_model(**best_trial.params)
