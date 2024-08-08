@@ -35,7 +35,7 @@ def optimize_model(trial,scaled_data):
     dropout_rate = trial.suggest_uniform('dropout_rate', 0.1, 0.5)
     batch_size = trial.suggest_int('batch_size', 32, 128)
     optimizer_idx = trial.suggest_int('optimizer_idx', 0, 2)
-    window_size = trial.suggest_int('window_size', 120, 150)
+    window_size = trial.suggest_int('window_size', 100, 200)
 
     X, y = [], []
     for i in range(len(scaled_data) - int(window_size)):
@@ -44,7 +44,7 @@ def optimize_model(trial,scaled_data):
     X, y = np.array(X), np.array(y)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size)
+    model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,window_size)
     early_stopping = EarlyStopping(monitor='val_loss', patience=5)
     history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
 
