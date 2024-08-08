@@ -93,8 +93,8 @@ def new_lstm(ti, scaled_data, scaler):
     study_name = script_name + '_study'
     storage = 'sqlite:///' + script_name + '_study.db'
     def callback(study, trial):
-    metrics = trial.value
-    print(f"Trial {trial.number} metrics: {metrics}")
+        metrics = trial.value
+        print(f"Trial {trial.number} metrics: {metrics}")
     study = optuna.create_study(directions=['minimize', 'minimize', 'minimize', 'minimize', 'maximize', 'maximize', 'minimize', 'minimize', 'minimize', 'minimize'],
                             study_name=study_name,
                             storage=storage,
