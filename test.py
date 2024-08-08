@@ -73,13 +73,15 @@ def new_lstm(ti, scaled_data, scaler):
                             study_name=study_name,storage=storage,load_if_exists=True,sampler=TPESampler())
     study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=2, n_jobs=-1)
     best_trials = study.best_trials
-    best_trial = best_trials[0]
+    best_trial = best_trials[0]  # Select the first best trial
     best_model = create_model(**best_trial.params)
-    train_data, test_data = train_test_split(scaled_data, test_size=0.2, random_state=42)
-    train_data, val_data = train_test_split(train_data, test_size=0.2, random_state=42)
-    train_data = train_data.reshape(-1, int(best_trial.params['window_size']), 1)
-    val_data = val_data.reshape(-1, int(best_trial.params['window_size']), 1)
-    best_model.fit(train_data, epochs=50, batch_size=int(best_trial.params['batch_size']), validation_data=val_data, verbose=0)
+    X, y = [], []
+    for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
+      X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
+      y.append(scaled_data[i + int(best_trial.params['window_size'])])
+    X, y = np.array(X), np.array(y)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    best_model.fit(X_train, y_train, epochs=50, batch_size=int(best_trial.params['batch_size']), validation_split=0.2, verbose=0)
     last_date = scaled_data.index[-1]
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
     forecasted_prices = []
