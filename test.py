@@ -14,14 +14,12 @@ import matplotlib.pyplot as plt
 import os
 from sklearn.model_selection import TimeSeriesSplit
 
-
 tickers = ['TCS.NS','INFY.NS']
 
-
 def ticker_data(tk,scaler):
-        data = yf.download(tk, period='5y')['Close'].dropna()
-        scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
-        return scaled_data
+  data = yf.download(tk, period='5y')['Close'].dropna()
+  scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
+  return scaled_data
 def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
         model = Sequential()
         model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
