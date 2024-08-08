@@ -32,7 +32,7 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
 def optimize_model(trial,scaled_data):
     lstm_units = trial.suggest_int('lstm_units', 50, 200)
     gru_units = trial.suggest_int('gru_units', 20, 200)
-    dropout_rate = trial.suggest_uniform('dropout_rate', 0.1, 0.5)
+    dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
     batch_size = trial.suggest_int('batch_size', 32, 128)
     optimizer_idx = trial.suggest_int('optimizer_idx', 0, 2)
     window_size = trial.suggest_int('window_size', 100, 200)
@@ -77,6 +77,8 @@ def new_lstm(ti, scaled_data, scaler):
     best_model = create_model(**best_trial.params)
     train_data, test_data = train_test_split(scaled_data, test_size=0.2, random_state=42)
     train_data, val_data = train_test_split(train_data, test_size=0.2, random_state=42)
+    train_data = train_data.reshape(-1, int(best_trial.params['window_size']), 1)
+    val_data = val_data.reshape(-1, int(best_trial.params['window_size']), 1)
     best_model.fit(train_data, epochs=50, batch_size=int(best_trial.params['batch_size']), validation_data=val_data, verbose=0)
     last_date = scaled_data.index[-1]
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
