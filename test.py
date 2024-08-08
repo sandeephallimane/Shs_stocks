@@ -16,7 +16,7 @@ from sklearn.model_selection import TimeSeriesSplit
 
 tickers = ['TCS.NS','INFY.NS']
 
-def ticker_data(tk,scaler):
+def stk_dt(tk,scaler):
   data = yf.download(tk, period='5y')['Close'].dropna()
   scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
   return scaled_data
@@ -117,7 +117,7 @@ def new_lstm(ti, scaled_data, scaler):
 
 for t in tickers:
     scaler = MinMaxScaler()
-    scaled_data = ticker_data(t, scaler)
+    scaled_data = stk_dt(t,scaler)
     f = new_lstm(t, scaled_data, scaler)
     print("Stock name:", t)
     print("Forecasted prices:", f)
