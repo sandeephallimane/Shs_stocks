@@ -83,7 +83,7 @@ def new_lstm(ti, scaled_data, scaler,lst):
       X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
       y.append(scaled_data[i + int(best_trial.params['window_size'])])
     X, y = np.array(X), np.array(y)
-    best_model.fit(X, y, epochs=50, batch_size=int(best_trial.params['batch_size']),callbacks=[early_stopping], verbose=0)
+    best_model.fit(X, y, epochs=100, batch_size=int(best_trial.params['batch_size']),callbacks=[early_stopping], verbose=0)
     last_date = lst
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
     forecasted_prices = []
