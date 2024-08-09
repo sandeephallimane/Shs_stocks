@@ -65,6 +65,7 @@ def optimize_model(trial,scaled_data):
     return mae, mse, rmse, mape, r2, ic, aic, msle, mad, mfe
    
 def new_lstm(ti, scaled_data, scaler,lst):
+    print('scaled_data:',scaled_data)
     for filename in os.listdir():
         if filename.endswith('_study.db'):
             os.remove(filename)
