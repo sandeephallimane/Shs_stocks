@@ -18,7 +18,7 @@ if physical_devices:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 tickers = ['TCS.NS','INFY.NS']
-early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True )
+early_stopping = EarlyStopping(monitor='val_loss', patience=5 )
 def stk_dt(tk,scaler):
    data = yf.download(tk, period='5y')['Close'].dropna()
    last_date = pd.to_datetime(data.index[-1].to_pydatetime().date())
