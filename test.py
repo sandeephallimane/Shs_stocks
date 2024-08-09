@@ -76,7 +76,8 @@ def new_lstm(ti, scaled_data, scaler,lst):
     best_trials = study.best_trials
     best_trial = best_trials[0]  
     best_model = create_model(**best_trial.params)
-    best_model.fit(scaled_data.reshape(-1, int(best_trial.params['window_size']), 1), epochs=100, batch_size=int(best_trial.params['batch_size']), verbose=0)
+    window_size = int(best_trial.params['window_size'])
+    best_model.fit(scaled_data[-window_size:].reshape(1, window_size, 1), epochs=100, batch_size=int(best_trial.params['batch_size']), verbose=0)
     last_date = lst
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
     forecasted_prices = []
