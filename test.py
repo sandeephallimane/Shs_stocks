@@ -83,7 +83,7 @@ def new_lstm(ti, scaled_data, scaler,lst):
     bts = int(best_trial.params['batch_size']) 
     print("bts:", bts)
     scaled_data = scaled_data[~np.isnan(scaled_data)] 
-    best_model.fit(scaled_data.reshape(1, len(scaled_data), 1), epochs=100, batch_size=bts, verbose=0)    
+    best_model.fit(scaled_data.reshape(len(scaled_data), 1, 1), epochs=100, batch_size=bts, verbose=0)    
     last_date = lst
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
     forecasted_prices = []
