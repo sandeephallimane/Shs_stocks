@@ -23,7 +23,7 @@ def stk_dt(tk,scaler):
 
 def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
     model = Sequential()
-    model.add(Input(shape=(window_size, 1)))  # Define input shape explicitly
+    model.add(Input(shape=( window_size, 1)))  
     model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True)))
     model.add(Dropout(dropout_rate))
     model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
@@ -64,42 +64,36 @@ def optimize_model(trial,scaled_data):
     mfe = np.mean((y_test - y_pred) / y_test) * 100 if y_test.all() != 0 else 100
     return mae, mse, rmse, mape, r2, ic, aic, msle, mad, mfe
    
-def new_lstm(ti, scaled_data, scaler,lst):
-    print('scaled_data:',scaled_data)
-    for filename in os.listdir():
-        if filename.endswith('_study.db'):
-            os.remove(filename)
-    script_name= ti
-    study_name = script_name + '_study'
-    storage = 'sqlite:///' + script_name + '_study.db'
-    
-    study = optuna.create_study(directions=['minimize', 'minimize', 'minimize', 'minimize', 'maximize','maximize', 'minimize', 'minimize', 'minimize', 'minimize'],
-                            study_name=study_name,storage=storage,load_if_exists=True,sampler=TPESampler())
-    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=5, n_jobs=5)
-    best_trials = study.best_trials
-    best_trial = best_trials[0]
-    best_model = create_model(**best_trial.params)
-    try:
-        window_size = int(best_trial.params['window_size'])
-        bts = int(best_trial.params['batch_size'])
-    except ValueError:
-        print("Error: window_size or batch_size is not a valid integer.")
-        return None
-    print("bts:", bts)
-    scaled_data = scaled_data[~np.isnan(scaled_data).any(axis=1)]
+def new_lstm(ti, scaled_data, scaler, lst):
+    study_name = ti + '_study'
+    storage = 'sqlite:///' + study_name + '.db'
+    study = OptunaStudy(study_name, storage)
+    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=5)
+
+    best_trial = study.get_best_trial()
+    best_params = study.get_best_params()
+
+    best_model = create_model(**best_params)
+    window_size = int(best_params['window_size'])
+    bts = int(best_params['batch_size'])
+
+    scaled_data = scaled_data[~np.isnan(scaled_data).any(axis=1)] 
+    scaled_data = scaled_data[scaled_data != None] 
     scaled_data = scaled_data.reshape(len(scaled_data), 1, 1)
-    print("best_model.input_shape:",best_model.input_shape)
-    input_shape = best_model.input_shape
     num_windows = len(scaled_data) // window_size
     scaled_data = scaled_data[-num_windows * window_size:]
     scaled_data = scaled_data.reshape(-1, window_size, 1)
-    best_model.fit(scaled_data, epochs=100, batch_size=bts, verbose=0)    
+    if np.any(scaled_data == None):
+        raise ValueError("None values found in scaled_data")
+    
+    best_model.fit(scaled_data, epochs=100, batch_size=bts, verbose=0)
+
     last_date = lst
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
     forecasted_prices = []
-    current_data = scaled_data[-int(best_trial.params['window_size']):]
+    current_data = scaled_data[-int(best_params['window_size']):]
     for date in forecast_dates:
-        prediction = best_model.predict(current_data.reshape(1, int(best_trial.params['window_size']), 1))[:, -1, :]
+        prediction = best_model.predict(current_data.reshape(1, int(best_params['window_size']), 1))[:, -1, :]
         forecasted_prices.append(prediction[0, 0])
         current_data = np.append(current_data[1:], prediction[0, 0])
     forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
