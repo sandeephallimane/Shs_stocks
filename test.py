@@ -73,8 +73,7 @@ def new_lstm(ti, scaled_data, scaler, lst):
     study_name = ti + '_study'
     storage = 'sqlite:///' + study_name + '.db'
     study = OptunaStudy(study_name, storage)
-    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=5)
-
+    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=5, n_objectives=10)
     best_trial = study.get_best_trial()
     best_params = study.get_best_params()
 
