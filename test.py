@@ -75,9 +75,9 @@ def new_lstm(ti, scaled_data, scaler,lst):
     study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=5, n_jobs=5)
     best_trials = study.best_trials
     best_trial = best_trials[0]
-    print("best_trial:",best_trial)
     best_model = create_model(**best_trial.params)
     window_size = int(best_trial.params['window_size'])
+    scaled_data = scaled_data[~np.isnan(scaled_data)]  # remove None values
     best_model.fit(scaled_data[-window_size:].reshape(1, window_size, 1), epochs=100, batch_size=int(best_trial.params['batch_size']), verbose=0)
     last_date = lst
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
