@@ -29,13 +29,14 @@ jobs:
     
       - name: Monitor GPU usage
         run: |
-          python
+          python -c "
           import gpustat
           import time
           while True:
             gpu_usage = gpustat.new_query().json['gpus'][0]['utilization']
-            print(f"GPU usage: {gpu_usage}%")
+            print(f'GPU usage: {gpu_usage}%')
             time.sleep(1)
+          "
       
       - name: Generate PDF
         run: 
