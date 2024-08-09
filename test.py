@@ -106,6 +106,12 @@ def new_lstm(ti, scaled_data, scaler, lst):
     forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
     return forecasted_prices
 
+def stk_dt(tk,scaler):
+   data = yf.download(tk, period='5y')['Close'].dropna()
+   last_date = pd.to_datetime(data.index[-1].to_pydatetime().date())
+   scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
+   return scaled_data,last_date
+    
 tickers = ['TCS.NS', 'INFY.NS']
 
 for t in tickers:
