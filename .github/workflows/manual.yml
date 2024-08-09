@@ -1,9 +1,8 @@
-
 name: LSTM
+
 on:
   workflow_dispatch:
-  #schedule:
-   # - cron: '45 0 * * 6'
+
 jobs:
   upload-plot:
     runs-on: macos-latest
@@ -27,8 +26,9 @@ jobs:
       - name: Generate PDF
         run: 
           python test.py
+          
       - name: Upload plot as artifact
         uses: actions/upload-artifact@v3
         with:
           name: plot
-          path: plot.png
+          path: ${{ github.workspace }}/plot.png
