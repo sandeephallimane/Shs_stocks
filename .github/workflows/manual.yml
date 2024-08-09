@@ -6,6 +6,11 @@ on:
 jobs:
   upload-plot:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            gpu: true
 
     steps:
       - name: Check out repository
