@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Bidirectional, Dense, Dropout, GRU
+from tensorflow.keras.layers import Input,LSTM, Bidirectional, Dense, Dropout, GRU
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 import optuna
@@ -23,11 +23,13 @@ def stk_dt(tk,scaler):
 
 def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
     model = Sequential()
-    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
+    model.add(Input(shape=(window_size, 1)))  # Define input shape explicitly
+    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True)))
     model.add(Dropout(dropout_rate))
     model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
     model.add(Dense(1))
-    model.compile(optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)], loss='mean_squared_error')
+    optimizers = ['adam', 'rmsprop', 'sgd']
+    model.compile(optimizer=optimizers[int(optimizer_idx)], loss='mean_squared_error')
     return model
    
 def optimize_model(trial,scaled_data):
@@ -78,7 +80,7 @@ def new_lstm(ti, scaled_data, scaler,lst):
     best_model = create_model(**best_trial.params)
     window_size = int(best_trial.params['window_size'])
     bts = int(best_trial.params['batch_size']) 
-    print("bts:", b)
+    print("bts:", bts)
     scaled_data = scaled_data[~np.isnan(scaled_data)] 
     best_model.fit(scaled_data.reshape(1, len(scaled_data), 1), epochs=100, batch_size=bts, verbose=0)    
     last_date = lst
