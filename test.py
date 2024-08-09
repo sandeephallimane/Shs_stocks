@@ -50,7 +50,7 @@ def optimize_model(trial,scaled_data):
 
     model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,window_size)
     early_stopping = EarlyStopping(monitor='val_loss', patience=5)
-    history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
+    history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_data=(X_test, y_test), callbacks=[early_stopping], verbose=0)
 
     y_pred = model.predict(X_test)[:, -1, :]
     mae = np.mean(np.abs(y_test - y_pred))
@@ -84,7 +84,7 @@ def new_lstm(ti, scaled_data, scaler,lst):
       X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
       y.append(scaled_data[i + int(best_trial.params['window_size'])])
     X, y = np.array(X), np.array(y)
-    best_model.fit(X, y, epochs=50, batch_size=int(best_trial.params['batch_size']), validation_split=0.2, verbose=0)
+    best_model.fit(X, y, epochs=50, batch_size=int(best_trial.params['batch_size']),callbacks=[early_stopping], verbose=0)
     last_date = lst
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
     forecasted_prices = []
