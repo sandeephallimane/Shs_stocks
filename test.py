@@ -74,7 +74,8 @@ def new_lstm(ti, scaled_data, scaler,lst):
                             study_name=study_name,storage=storage,load_if_exists=True,sampler=TPESampler())
     study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=5, n_jobs=5)
     best_trials = study.best_trials
-    best_trial = best_trials[0]  
+    best_trial = best_trials[0]
+    print("best_trial:",best_trial)
     best_model = create_model(**best_trial.params)
     window_size = int(best_trial.params['window_size'])
     best_model.fit(scaled_data[-window_size:].reshape(1, window_size, 1), epochs=100, batch_size=int(best_trial.params['batch_size']), verbose=0)
