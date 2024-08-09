@@ -17,7 +17,7 @@ physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 tickers = ['TCS.NS','INFY.NS']
-
+early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True )
 def stk_dt(tk,scaler):
    data = yf.download(tk, period='5y')['Close'].dropna()
    last_date = pd.to_datetime(data.index[-1].to_pydatetime().date())
@@ -49,7 +49,6 @@ def optimize_model(trial,scaled_data):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,window_size)
-    early_stopping = EarlyStopping(monitor='val_loss', patience=5)
     history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_data=(X_test, y_test), callbacks=[early_stopping], verbose=0)
 
     y_pred = model.predict(X_test)[:, -1, :]
