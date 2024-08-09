@@ -91,6 +91,7 @@ def new_lstm(ti, scaled_data, scaler,lst):
         forecasted_prices.append(prediction[0, 0])
         current_data = np.append(current_data[1:], prediction[0, 0])
     forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
+    print("forecasted_prices:",forecasted_prices)
     return forecasted_prices
 
 for t in tickers:
