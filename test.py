@@ -17,7 +17,7 @@ tickers = ['TCS.NS','INFY.NS']
 
 def stk_dt(tk,scaler):
    data = yf.download(tk, period='5y')['Close'].dropna()
-   last_date = data.index[-1].to_pydatetime().date()
+   last_date = pd.to_datetime(data.index[-1].to_pydatetime().date())
    scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
    return scaled_data,last_date
 
@@ -89,7 +89,7 @@ def new_lstm(ti, scaled_data, scaler,lst):
     scaled_data = scaled_data[~np.isnan(scaled_data).any(axis=1)]
     scaled_data = scaled_data.reshape(len(scaled_data), 1, 1)
     best_model.fit(scaled_data, epochs=100, batch_size=bts, verbose=0)    
-    last_date = pd.to_datetime(lst)
+    last_date = lst
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
     forecasted_prices = []
     current_data = scaled_data[-int(best_trial.params['window_size']):]
