@@ -1,5 +1,4 @@
 name: LSTM
-
 on:
   workflow_dispatch:
 
@@ -26,13 +25,18 @@ jobs:
          python -m pip cache purge &&
          python -m pip install --upgrade pip setuptools &&
          python -m pip install -r lstmreq.txt
+         python -m pip install psutil gpustat
     
+      - name: Monitor GPU usage
+        run: |
+          python
+          import gpustat
+          import time
+          while True:
+            gpu_usage = gpustat.new_query().json['gpus'][0]['utilization']
+            print(f"GPU usage: {gpu_usage}%")
+            time.sleep(1)
+      
       - name: Generate PDF
         run: 
           python test.py
-          
-      - name: Upload plot as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: plot
-          path: ${{ github.workspace }}/plot.png
