@@ -72,7 +72,7 @@ def new_lstm(ti, scaled_data, scaler,lst):
     
     study = optuna.create_study(directions=['minimize', 'minimize', 'minimize', 'minimize', 'maximize','maximize', 'minimize', 'minimize', 'minimize', 'minimize'],
                             study_name=study_name,storage=storage,load_if_exists=True,sampler=TPESampler())
-    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=5, n_jobs=5)
+    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=25, n_jobs=8)
     best_trials = study.best_trials
     best_trial = best_trials[0]  # Select the first best trial
     best_model = create_model(**best_trial.params)
