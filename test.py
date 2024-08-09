@@ -88,6 +88,7 @@ def new_lstm(ti, scaled_data, scaler,lst):
     print("bts:", bts)
     scaled_data = scaled_data[~np.isnan(scaled_data).any(axis=1)]
     scaled_data = scaled_data.reshape(len(scaled_data), 1, 1)
+    print("best_model.input_shape:",best_model.input_shape)
     best_model.fit(scaled_data, epochs=100, batch_size=bts, verbose=0)    
     last_date = lst
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
