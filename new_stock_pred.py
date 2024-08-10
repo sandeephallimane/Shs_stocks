@@ -3,7 +3,7 @@ import yfinance as yf
 from pmdarima.arima import auto_arima
 import numpy as np
 from datetime import datetime, timedelta
-from scipy.stats import kurtosis  # Import kurtosis function from scipy.stats
+from scipy.stats import kurtosis  
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -11,10 +11,111 @@ from email.mime.base import MIMEBase
 from email import encoders
 import smtplib
 from jinja2 import Environment, FileSystemLoader
-#import pdfkit
 from weasyprint import HTML, CSS
 import os
 import google.generativeai as genai
+import tensorflow as tf
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Bidirectional, Dense, Dropout, GRU
+from tensorflow.keras.losses import MeanSquaredError, MeanAbsoluteError, MeanSquaredLogarithmicError
+from tensorflow.keras.metrics import MeanAbsoluteError, MeanSquaredError,MeanAbsolutePercentageError , MeanSquaredLogarithmicError
+from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.model_selection import train_test_split
+import optuna
+from optuna.samplers import TPESampler
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import TimeSeriesSplit
+
+physical_devices = tf.config.list_physical_devices('GPU')
+if physical_devices:
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+scaler = MinMaxScaler()
+early_stopping = EarlyStopping(monitor='mean_squared_error', patience=5 )
+
+def stk_dt(data):
+   last_date = pd.to_datetime(data.index[-1].to_pydatetime().date())
+   scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
+   return scaled_data,last_date
+
+@tf.function
+def combined_loss(y_true, y_pred):
+    mse = tf.keras.losses.MeanSquaredError()(y_true, y_pred)
+    mae = tf.keras.losses.MeanAbsoluteError()(y_true, y_pred)
+    msle = tf.keras.losses.MeanSquaredLogarithmicError()(y_true, y_pred)
+    return 0.6 * mse + 0.3 * mae + 0.1 * msle
+  
+def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
+    model = Sequential()
+    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
+    model.add(Dropout(dropout_rate))
+    model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
+    model.add(Dense(1))       
+    model.compile(
+        optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)],
+        loss=combined_loss,
+        metrics=[
+            'mean_absolute_error', 
+            'mean_squared_error', 
+            'mean_absolute_percentage_error', 
+            'mean_squared_logarithmic_error'        ])
+    return model
+    
+def optimize_model(trial,scaled_data):
+    lstm_units = trial.suggest_int('lstm_units', 50, 200)
+    gru_units = trial.suggest_int('gru_units', 20, 200)
+    dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
+    batch_size = trial.suggest_int('batch_size', 32, 64)
+    optimizer_idx = trial.suggest_int('optimizer_idx', 0, 2)
+    window_size = trial.suggest_int('window_size', 50, 250)
+
+    X, y = [], []
+    for i in range(len(scaled_data) - int(window_size)):
+        X.append(scaled_data[i:i + int(window_size)])
+        y.append(scaled_data[i + int(window_size)])
+    X, y = np.array(X), np.array(y)  
+    model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,window_size)
+    history = model.fit(X, y, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
+
+    mae = history.history['val_mean_absolute_error'][-1]
+    mse = history.history['val_mean_squared_error'][-1]
+    mape = history.history['val_mean_absolute_percentage_error'][-1]
+    #mase = history.history['val_mean_absolute_scaled_error'][-1]
+    rmse =  np.sqrt(mse)
+    msle = history.history['val_mean_squared_logarithmic_error'][-1]
+    return mae, mse, rmse, msle,mape
+   
+def new_lstm(ti, scaled_data, scaler,lst):
+    for filename in os.listdir():
+        if filename.endswith('_study.db'):
+            os.remove(filename)
+    script_name= ti
+    study_name = script_name + '_study'
+    storage = 'sqlite:///' + script_name + '_study.db'
+    
+    study = optuna.create_study(directions=['minimize', 'minimize','minimize','minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=TPESampler())
+    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=25, n_jobs=8)
+    best_trials = study.best_trials
+    best_trial = best_trials[0]  # Select the first best trial
+    best_model = create_model(**best_trial.params)
+    X, y = [], []
+    for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
+      X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
+      y.append(scaled_data[i + int(best_trial.params['window_size'])])
+    X, y = np.array(X), np.array(y)
+    best_model.fit(X, y, epochs=100, batch_size=int(best_trial.params['batch_size']),callbacks=[early_stopping], verbose=0)
+    last_date = lst
+    forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
+    forecasted_prices = []
+    current_data = scaled_data[-int(best_trial.params['window_size']):]
+    for date in forecast_dates:
+        prediction = best_model.predict(current_data.reshape(1, int(best_trial.params['window_size']), 1))[:, -1, :]
+        forecasted_prices.append(prediction[0, 0])
+        current_data = np.append(current_data[1:], prediction[0, 0])
+    forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
+    print("forecasted_prices:",forecasted_prices)
+    return forecasted_prices
 
 ticker_symbols=(os.getenv('TS')).split(',')
 print(ticker_symbols)
@@ -22,7 +123,7 @@ ak= os.getenv('AK')
 se=os.getenv('SE')
 re=(os.getenv('RE')).split(',')
 print(re)
-pwd = os.getenv('PASSWORD')
+pwd = os.getenv('PSW')
 if pwd is None :
     raise ValueError("Password not found in environment variables")
 if ak is None :
@@ -33,17 +134,11 @@ if re is None :
     raise ValueError("Receiver Email not found in environment variables")
 genai.configure(api_key=ak)
 current_time_ist = (datetime.now() + timedelta(hours=5, minutes=30, seconds=0)).strftime("%Y-%m-%d %H:%M:%S") 
-current_date = datetime.now().date()
-five_years_ago = current_date - timedelta(days=5 * 365)
 ms= 'Stock Forecast Results:'+current_time_ist
-# Format the dates as strings
-start_date = five_years_ago.strftime('%Y-%m-%d')
-end_date = current_date.strftime('%Y-%m-%d')
-# Function to fetch and process data for each ticker symbol
+
 def calculate_ema(values, window):
     return values.ewm(span=window, adjust=False).mean()
-current_date = datetime.now().date()
-five_years_ago = current_date - timedelta(days=5 * 365)
+
 def calculate_stochastic_oscillator(df):
     n=14
     m=3
@@ -87,8 +182,8 @@ def generate_pdf(html_content,footer_html):
             'footer-html': footer_html,  # Path to footer HTML file
         }
         
-       # pdfkit.from_string(html_content, 'Arima_forecast_summary.pdf', options=options)
-       # print("PDF created successfully: Arima_forecast_summary.pdf")
+       # pdfkit.from_string(html_content, 'Arima_LSTM_forecast_summary.pdf', options=options)
+       # print("PDF created successfully: Arima_LSTM_forecast_summary.pdf")
     except Exception as e:
         print(f"Error creating PDF: {e}")
 def fndmntl(ticker):
@@ -98,10 +193,9 @@ def fndmntl(ticker):
 def forecast_stock_returns(ticker_symbol):
     print(ticker_symbol)
     try:
-      stock_data = yf.download(ticker_symbol, start=start_date, end=end_date)
+      stock_data = yf.download(tk, period='5y').dropna()
       stock_data.dropna(inplace=True)
       if len(stock_data)>300:
-        # Calculate daily returns
         stock_data['Returns'] =  np.log(stock_data['Adj Close'] / stock_data['Adj Close'].shift(1))
         stock_data['Diff'] =  stock_data['Adj Close'].diff()
         stock_data.dropna(inplace=True)
@@ -120,13 +214,13 @@ def forecast_stock_returns(ticker_symbol):
         TI.append(cal_MACD((stock_data['Close']).tail(700)))
         TI.append(cal_GC((stock_data['Close']).tail(700)))
         TI.append(calculate_stochastic_oscillator((stock_data).tail(700)))
-        if yearly_returns>12 and current_cmp>20 and current_cmp < (stock_data_52_high*0.9):
+        if yearly_returns>12 and current_cmp>20 and kurtosis_val>2 and kurtosis_val<6:
             z_scores = np.abs(stock_data['Returns'] - stock_data['Returns'].mean()) / stock_data['Returns'].std()
-            stock_data = stock_data[(z_scores < 3)]  
+            stock_data1 = stock_data[(z_scores < 3)]  
             z_scores1 = np.abs(stock_data['Diff'] - stock_data['Diff'].mean()) / stock_data['Diff'].std()
-            stock_data = stock_data[(z_scores1 < 3)]
-            series = stock_data['Returns']
-            series1 = stock_data['Diff']
+            stock_data2 = stock_data[(z_scores1 < 3)]
+            series = stock_data1['Returns']
+            series1 = stock_data2['Diff']
             model11 = auto_arima(series, seasonal=False, trace=False,start_P=0,start_D=0,start_Q=0,max_P=5,max_D=5,max_Q=5)
             model12 = auto_arima(series, seasonal=True, trace=False,start_P=0,start_D=0,start_Q=0,max_P=5,max_D=5,max_Q=5)
             model21 = auto_arima(series1, seasonal=False, trace=False,start_P=0,start_D=0,start_Q=0,max_P=5,max_D=5,max_Q=5)
@@ -145,8 +239,17 @@ def forecast_stock_returns(ticker_symbol):
             res_p21= ["Price Diff-Non Seasonal",np.average(res21).round(2),np.max(res21).round(2),np.min(res21).round(2),(((np.average(res21)-current_cmp)/current_cmp)*100).round(2)]
             res22 = [current_cmp]+ [current_cmp + sum(forecast22[:i+1]) for i in range(len(forecast22))]
             res_p22=["Price Diff Seasonal",np.average(res22).round(2),np.max(res22).round(2),np.min(res22).round(2),(((np.average(res22)-current_cmp)/current_cmp)*100).round(2)]
-            k= [ticker_symbol,v,[res_p11,res_p12,res_p21,res_p22],"NA",TI]
-            return k
+            if res_p11[3]>5 and res_p21[3]>5:
+              scaled_data,lst = stk_dt(stock_data['Adj Close'].dropna())
+              f = new_lstm(ticker_symbol, scaled_data, scaler,lst)
+              res_p55=["LSTM Price",np.average(f).round(2),np.max(f).round(2),np.min(f).round(2),(((np.average(f)-current_cmp)/current_cmp)*100).round(2)]
+              if res_p55[3]>5:
+                 k= [ticker_symbol,v,[res_p11,res_p12,res_p21,res_p22,res_p55],"NA",TI]
+                 return k
+              else:
+                 return "NA"   
+            else:
+              return "NA"  
         else:
             return "NA"
       else:
@@ -197,7 +300,6 @@ def generate_nested_html(single_row):
     nested_html += "<td>"
     nm1 =["RSI","MACD","EMA","Stochastic Oscilator"]  
     nested_html += "<table border='1'>\n"
-    # Iterate over the minimum length to avoid index errors
     for i, value in enumerate(single_row[4][:min(len(nm1), len(single_row[4]))]):
         nested_html += "<tr>" 
         nested_html += f"<td>{nm1[i]}</td>"
@@ -271,8 +373,8 @@ email_body += """
 </table><p style="color: purple;">
  <strong> Please Note:</strong> Above stocks are filtered based on below criteria
   <ul>
- <li>Historical avg yearly returns > 12% </li> <li>CMP> Rs.50 </li> <li>Kurtosis lies between 2-4 </li>
- <li>Forecasted avg price based on both return and price difference forecast for next 6 month > 5% </li>
+ <li>Historical avg yearly returns > 9% </li> <li>CMP> Rs.20 </li> <li>Kurtosis lies between 2-6 </li>
+ <li>Forecasted avg price based on both return, price difference,LSTM forecast for next 6 month > 5% </li>
 </ui></p>
 <p><strong style="color:Tomato;"> Please See:</strong> Summary column tried to capture financial strength of the company with the help of Gemini AI. It may not give accurate picture.Please do the Fundamental analysis manually.</p>
 </h2><br>
@@ -285,9 +387,7 @@ email_body += f"""
        </body>
        </html>"""
 
-#generate_pdf(email_body,footer_html)
-#pdfkit.from_string(email_body, 'Arima_forecast_summary.pdf')
-output_pdf = "Arima_forecast_summary.pdf"
+output_pdf = "Arima_LSTM_forecast_summary.pdf"
 HTML(string=email_body).write_pdf(output_pdf)
 
 def send_email(subject, html_content, receiver_emails, attachment_path=None):
@@ -302,7 +402,6 @@ def send_email(subject, html_content, receiver_emails, attachment_path=None):
     msg['To'] = ', '.join(receiver_emails)
     msg['Subject'] = subject
 
-    # Attach HTML content
     msg.attach(MIMEText(html_content, 'html'))
 
     # Attach PDF file if path is provided
@@ -333,10 +432,6 @@ e_body = """
   </body></html>
 """
 receiver_emails = re
-#receiver_emails = ['sandeephs.rvim22@gmail.com']
+pdf_attachment_path ='Arima_LSTM_forecast_summary.pdf'
 
-# Path to the PDF file you want to attach
-pdf_attachment_path ='Arima_forecast_summary.pdf'
-
-# Send email with HTML content and PDF attachment
 send_email(ms, e_body, receiver_emails, attachment_path=pdf_attachment_path)
