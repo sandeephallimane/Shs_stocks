@@ -4,8 +4,13 @@ on:
     - cron: '0 18 * * 6'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  upload-plot:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            gpu: true
 
     steps:
       - name: Check out repository
