@@ -1,7 +1,7 @@
 name: Generate and Push PDF
 on:
   schedule:
-    - cron: '45 0 * * 6'
+    - cron: '0 18 * * 6'
 
 jobs:
   build:
@@ -39,4 +39,4 @@ jobs:
           RE: ${{ secrets.RE_EMAIL }}
           SE: ${{ secrets.S_EMAIL }}
         run: 
-          python new_stock_pred.py
+          python nt.py
