@@ -25,9 +25,9 @@ jobs:
           exit 1
          fi
 
-      - name: Install GTK+
+      - name: Install wkhtmltopdf
         run: |
-          brew install gtk+
+          brew install wkhtmltopdf
 
       - name: Set up Python
         uses: actions/setup-python@v3
