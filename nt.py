@@ -121,7 +121,7 @@ ak= os.getenv('AK')
 se=os.getenv('SE')
 re=(os.getenv('RE')).split(',')
 print(re)
-pwd = os.getenv('PSW')
+pwd = os.getenv('PWS')
 if pwd is None :
     raise ValueError("Password not found in environment variables")
 if ak is None :
