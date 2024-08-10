@@ -42,9 +42,6 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
         mae = tf.keras.losses.MeanAbsoluteError()(y_true, y_pred)
         msle = tf.keras.losses.MeanSquaredLogarithmicError()(y_true, y_pred)
         return 0.6 * mse + 0.3 * mae + 0.1 * msle
-    
-    def mean_absolute_percentage_error(y_true, y_pred):
-        return tf.reduce_mean(tf.abs((y_true - y_pred) / (y_true + 1e-8))) * 100
 
     def mean_absolute_scaled_error(y_true, y_pred):
       mean_true = tf.reduce_mean(y_true, axis=0, keepdims=True)
