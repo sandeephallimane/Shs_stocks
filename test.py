@@ -6,7 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Bidirectional, Dense, Dropout, GRU
 from tensorflow.keras.losses import MeanSquaredError, MeanAbsoluteError, MeanSquaredLogarithmicError
-from tensorflow.keras.metrics import MeanAbsoluteError, MeanSquaredError, MeanSquaredLogarithmicError
+from tensorflow.keras.metrics import MeanAbsoluteError, MeanSquaredError,MeanAbsolutePercentageError , MeanSquaredLogarithmicError
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 import optuna
@@ -47,11 +47,12 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
         return tf.reduce_mean(tf.abs((y_true - y_pred) / (y_true + 1e-8))) * 100
 
     def mean_absolute_scaled_error(y_true, y_pred):
-        mean_true = tf.reduce_mean(y_true)
-        if mean_true == 0:
-            return tf.reduce_mean(tf.abs(y_true - y_pred))
-        else:
-            return tf.reduce_mean(tf.abs(y_true - y_pred)) / tf.reduce_mean(tf.abs(y_true - mean_true))
+      mean_true = tf.reduce_mean(y_true, axis=0, keepdims=True)
+      return tf.cond(
+        tf.equal(mean_true, 0),
+        lambda: tf.reduce_mean(tf.abs(y_true - y_pred), axis=0),
+        lambda: tf.reduce_mean(tf.abs(y_true - y_pred), axis=0) / tf.reduce_mean(tf.abs(y_true - mean_true), axis=0)
+    )
           
     model.compile(
         optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)],
@@ -59,10 +60,8 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
         metrics=[
             'mean_absolute_error', 
             'mean_squared_error', 
-            mean_absolute_percentage_error,  
-            mean_absolute_scaled_error,  
-            'mean_squared_logarithmic_error'  
-        ])
+            'mean_absolute_percentage_error', 
+            'mean_squared_logarithmic_error'        ])
     return model
     
 def optimize_model(trial,scaled_data):
@@ -84,10 +83,10 @@ def optimize_model(trial,scaled_data):
     mae = history.history['val_mean_absolute_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
     mape = history.history['val_mean_absolute_percentage_error'][-1]
-    mase = history.history['val_mean_absolute_scaled_error'][-1]
+    #mase = history.history['val_mean_absolute_scaled_error'][-1]
     rmse =  np.sqrt(mse)
     msle = history.history['val_mean_squared_logarithmic_error'][-1]
-    return mae, mse, mape, mase, rmse, msle
+    return mae, mse, rmse, msle,mape
    
 def new_lstm(ti, scaled_data, scaler,lst):
     for filename in os.listdir():
@@ -97,7 +96,7 @@ def new_lstm(ti, scaled_data, scaler,lst):
     study_name = script_name + '_study'
     storage = 'sqlite:///' + script_name + '_study.db'
     
-    study = optuna.create_study(directions=['minimize', 'minimize', 'minimize', 'minimize', 'minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=TPESampler())
+    study = optuna.create_study(directions=['minimize', 'minimize','minimize','minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=TPESampler())
     study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=25, n_jobs=8)
     best_trials = study.best_trials
     best_trial = best_trials[0]  # Select the first best trial
