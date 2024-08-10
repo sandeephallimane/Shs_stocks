@@ -24,16 +24,23 @@ jobs:
           echo "File stocks.txt not found."
           exit 1
          fi
+
+      - name: Install GTK+
+        run: |
+          brew install gtk+
+
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
           python-version: '3.9'  
+      
       - name: Execute Python dependency
         run: |
          python -m pip uninstall -r requirements2.txt &&
          python -m pip cache purge &&
          python -m pip install --upgrade pip setuptools &&
-         python -m pip install -r requirements2.txt
+         python -m pip install -r requirements2.txt &&
+         python -m pip install weasyprint
     
       - name: Generate PDF
         env:
