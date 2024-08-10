@@ -19,21 +19,14 @@ if physical_devices:
 
 tickers = ['TCS.NS','INFY.NS']
 early_stopping = EarlyStopping(monitor='val_loss', patience=5 )
+
 def stk_dt(tk,scaler):
    data = yf.download(tk, period='5y')['Close'].dropna()
    last_date = pd.to_datetime(data.index[-1].to_pydatetime().date())
    scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
    return scaled_data,last_date
 
-def mean_absolute_percentage_error(y_true, y_pred):
-    return np.mean(np.abs((y_true - y_pred) / (y_true + 1e-8))) * 100
 
-def mean_absolute_scaled_error(y_true, y_pred):
-    mean_true = np.mean(y_true)
-    if mean_true == 0:
-        return np.mean(np.abs(y_true - y_pred))
-    else:
-        return np.mean(np.abs(y_true - y_pred)) / np.mean(np.abs(y_true - mean_true))
 
 def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
     model = Sequential()
@@ -42,10 +35,25 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
     model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
     model.add(Dense(1))
     
+    def combined_loss(y_true, y_pred):
+       mse = tf.keras.losses.MeanSquaredError()(y_true, y_pred)
+       mae = tf.keras.losses.MeanAbsoluteError()(y_true, y_pred)
+       msle = tf.keras.losses.MeanSquaredLogarithmicError()(y_true, y_pred)
+       return 0.6 * mse + 0.3 * mae + 0.1 * msle
+    
+    def mean_absolute_percentage_error(y_true, y_pred):
+      return np.mean(np.abs((y_true - y_pred) / (y_true + 1e-8))) * 100
+
+    def mean_absolute_scaled_error(y_true, y_pred):
+      mean_true = np.mean(y_true)
+      if mean_true == 0:
+         return np.mean(np.abs(y_true - y_pred))
+      else:
+         return np.mean(np.abs(y_true - y_pred)) / np.mean(np.abs(y_true - mean_true))
+          
     model.compile(
     optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)],
-    loss=['mean_squared_error', 'mean_absolute_error', 'mean_squared_logarithmic_error'],
-    loss_weights=[0.6, 0.3, 0.1],
+    loss=combined_loss,
     metrics=[
         'mean_absolute_error', 
         'mean_squared_error', 
