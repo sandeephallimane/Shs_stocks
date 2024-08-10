@@ -1,10 +1,10 @@
 import pandas as pd
-import yfinance as yf
 from pmdarima.arima import auto_arima
 import numpy as np
 from datetime import datetime, timedelta
 from scipy.stats import kurtosis  
 import smtplib
+import yfinance as yf
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
