@@ -26,6 +26,7 @@ from optuna.samplers import TPESampler
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import TimeSeriesSplit
 
+print("PROCESS STARTED")
 physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -38,7 +39,6 @@ def stk_dt(data):
    scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
    return scaled_data,last_date
 
-@tf.function
 def combined_loss(y_true, y_pred):
     mse = tf.keras.losses.MeanSquaredError()(y_true, y_pred)
     mae = tf.keras.losses.MeanAbsoluteError()(y_true, y_pred)
@@ -113,7 +113,6 @@ def new_lstm(ti, scaled_data, scaler,lst):
         forecasted_prices.append(prediction[0, 0])
         current_data = np.append(current_data[1:], prediction[0, 0])
     forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
-    print("forecasted_prices:",forecasted_prices)
     return forecasted_prices
 
 ticker_symbols=(os.getenv('TS')).split(',')
