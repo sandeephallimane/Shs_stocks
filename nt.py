@@ -5,12 +5,12 @@ from datetime import datetime, timedelta
 from scipy.stats import kurtosis  
 import smtplib
 import yfinance as yf
+import pdfkit
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML, CSS
 import os
 import google.generativeai as genai
 import tensorflow as tf
@@ -386,8 +386,16 @@ email_body += f"""
        </html>"""
 
 output_pdf = "Arima_LSTM_forecast_summary.pdf"
-HTML(string=email_body).write_pdf(output_pdf)
+qe = {
+    'page-size': 'A4',
+    'margin-top': '0.75in',
+    'margin-right': '0.75in',
+    'margin-bottom': '0.75in',
+    'margin-left': '0.75in',
+    'border': '1px solid black'
+}
 
+pdfkit.from_string(email_body, output_pdf', options=qe)
 def send_email(subject, html_content, receiver_emails, attachment_path=None):
     smtp_server = 'smtp.gmail.com'
     smtp_port = 587
