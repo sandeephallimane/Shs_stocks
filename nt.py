@@ -191,7 +191,7 @@ def fndmntl(ticker):
 def forecast_stock_returns(ticker_symbol):
     print(ticker_symbol)
     try:
-      stock_data = yf.download(tk, period='5y').dropna()
+      stock_data = yf.download(ticker_symbol, period='5y').dropna()
       stock_data.dropna(inplace=True)
       if len(stock_data)>300:
         stock_data['Returns'] =  np.log(stock_data['Adj Close'] / stock_data['Adj Close'].shift(1))
