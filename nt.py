@@ -395,7 +395,7 @@ qe = {
     'border': '1px solid black'
 }
 
-pdfkit.from_string(email_body, output_pdf', options=qe)
+pdfkit.from_string(email_body, output_pdf, options=qe)
 def send_email(subject, html_content, receiver_emails, attachment_path=None):
     smtp_server = 'smtp.gmail.com'
     smtp_port = 587
