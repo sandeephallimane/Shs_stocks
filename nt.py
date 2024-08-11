@@ -51,10 +51,10 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
     model.add(Dense(1)) 
 
     def combined_loss(y_true, y_pred):
-    mse = tf.keras.losses.MeanSquaredError()(y_true, y_pred)
-    mae = tf.keras.losses.MeanAbsoluteError()(y_true, y_pred)
-    msle = tf.keras.losses.MeanSquaredLogarithmicError()(y_true, y_pred)
-    return 0.6 * mse + 0.3 * mae + 0.1 * msle
+      mse = tf.keras.losses.MeanSquaredError()(y_true, y_pred)
+      mae = tf.keras.losses.MeanAbsoluteError()(y_true, y_pred)
+      msle = tf.keras.losses.MeanSquaredLogarithmicError()(y_true, y_pred)
+      return 0.6 * mse + 0.3 * mae + 0.1 * msle
     
     model.compile(
         optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)],
