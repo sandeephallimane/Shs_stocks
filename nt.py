@@ -215,7 +215,7 @@ def forecast_stock_returns(ticker_symbol):
         TI.append(cal_MACD((stock_data['Close']).tail(700)))
         TI.append(cal_GC((stock_data['Close']).tail(700)))
         TI.append(calculate_stochastic_oscillator((stock_data).tail(700)))
-        if yearly_returns>12 and current_cmp>20 and kurtosis_val>2 and kurtosis_val<6:
+        if yearly_returns>9 and current_cmp>20 and kurtosis_val>2 and kurtosis_val<6:
             z_scores = np.abs(stock_data['Returns'] - stock_data['Returns'].mean()) / stock_data['Returns'].std()
             stock_data1 = stock_data[(z_scores < 3)]  
             z_scores1 = np.abs(stock_data['Diff'] - stock_data['Diff'].mean()) / stock_data['Diff'].std()
