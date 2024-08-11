@@ -17,7 +17,7 @@ import os
 import google.generativeai as genai
 
 ta=0
-def tab()
+def tab():
   conn = sqlite3.connect('sandeephallimane.db')
   cursor = conn.cursor()
   cursor.execute('''CREATE TABLE IF NOT EXISTS stock_analysis (
