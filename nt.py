@@ -247,6 +247,7 @@ def forecast_stock_returns(ticker_symbol):
               if res_p55[3]>5:
                  k= [ticker_symbol,v,[res_p11,res_p12,res_p21,res_p22,res_p55],"NA",TI]
                  xs=xs+1
+                 print("xs:", xs) 
                  return k
               else:
                  return "NA"   
@@ -265,14 +266,13 @@ t =[]
 for ticker_symbol in ticker_symbols:
     result = forecast_stock_returns(ticker_symbol)
     if result != "NA":
-       if (((result[2])[0])[4])>5 and (((result[2])[2])[4])>5:
-          a= fndmntl(result[0])
-          query = "Read and summarize financial position/n"+ (((a.balance_sheet).iloc[:, :2]).dropna()).to_string() + "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()+ "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()
-          model = genai.GenerativeModel("models/gemini-1.0-pro")  
-          j=model.generate_content(query)
-          result[3] = j.text
-          forecasts.append(result)
-    result= []
+       a= fndmntl(result[0])
+       query = "Read and summarize financial position/n"+ (((a.balance_sheet).iloc[:, :2]).dropna()).to_string() + "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()+ "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()
+       model = genai.GenerativeModel("models/gemini-1.0-pro")  
+       j=model.generate_content(query)
+       result[3] = j.text
+       forecasts.append(result)
+       result= []
 
 def generate_nested_html(single_row): 
     # Start the main row
