@@ -195,7 +195,7 @@ def forecast_stock_returns(ticker_symbol):
     global xs
     try:
       stock_data = yf.download(ticker_symbol, period='5y').dropna()
-      stock_data.dropna(inplace=True)
+      sd =stock_data['Adj Close']
       if len(stock_data)>300 and xs<7:
         stock_data['Returns'] =  np.log(stock_data['Adj Close'] / stock_data['Adj Close'].shift(1))
         stock_data['Diff'] =  stock_data['Adj Close'].diff()
