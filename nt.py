@@ -26,12 +26,13 @@ from optuna.samplers import TPESampler
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import TimeSeriesSplit
 
-xs=0
+
 print("PROCESS STARTED")
 physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
+xs = 0
 scaler = MinMaxScaler()
 early_stopping = EarlyStopping(monitor='mean_squared_error', patience=5 )
 
