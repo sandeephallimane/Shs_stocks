@@ -37,22 +37,25 @@ scaler = MinMaxScaler()
 early_stopping = EarlyStopping(monitor='mean_squared_error', patience=5 )
 
 def stk_dt(data):
+   scaler = MinMaxScaler()
    last_date = pd.to_datetime(data.index[-1].to_pydatetime().date())
    scaled_data = scaler.fit_transform(data.values.reshape(-1, 1))
    return scaled_data,last_date
 
-def combined_loss(y_true, y_pred):
-    mse = tf.keras.losses.MeanSquaredError()(y_true, y_pred)
-    mae = tf.keras.losses.MeanAbsoluteError()(y_true, y_pred)
-    msle = tf.keras.losses.MeanSquaredLogarithmicError()(y_true, y_pred)
-    return 0.6 * mse + 0.3 * mae + 0.1 * msle
   
 def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
     model = Sequential()
     model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
     model.add(Dropout(dropout_rate))
     model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
-    model.add(Dense(1))       
+    model.add(Dense(1)) 
+
+    def combined_loss(y_true, y_pred):
+    mse = tf.keras.losses.MeanSquaredError()(y_true, y_pred)
+    mae = tf.keras.losses.MeanAbsoluteError()(y_true, y_pred)
+    msle = tf.keras.losses.MeanSquaredLogarithmicError()(y_true, y_pred)
+    return 0.6 * mse + 0.3 * mae + 0.1 * msle
+    
     model.compile(
         optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)],
         loss=combined_loss,
@@ -70,7 +73,8 @@ def optimize_model(trial,scaled_data):
     batch_size = trial.suggest_int('batch_size', 32, 64)
     optimizer_idx = trial.suggest_int('optimizer_idx', 0, 2)
     window_size = trial.suggest_int('window_size', 50, 250)
-
+    
+    early_stopping = EarlyStopping(monitor='mean_squared_error', patience=5 )
     X, y = [], []
     for i in range(len(scaled_data) - int(window_size)):
         X.append(scaled_data[i:i + int(window_size)])
@@ -100,6 +104,8 @@ def new_lstm(ti, scaled_data, scaler,lst):
     best_trials = study.best_trials
     best_trial = best_trials[0]  # Select the first best trial
     best_model = create_model(**best_trial.params)
+    early_stopping = EarlyStopping(monitor='mean_squared_error', patience=5 )
+    scaler = MinMaxScaler()
     X, y = [], []
     for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
       X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
@@ -199,12 +205,9 @@ def forecast_stock_returns(ticker_symbol):
       if len(stock_data)>300 and xs<7:
         stock_data['Returns'] =  np.log(stock_data['Adj Close'] / stock_data['Adj Close'].shift(1))
         stock_data['Diff'] =  stock_data['Adj Close'].diff()
-        stock_data.dropna(inplace=True)
-        stock_data['52 Week High'] = stock_data['Adj Close'].rolling(window=252).max()
-        stock_data['52 Week Low'] = stock_data['Adj Close'].rolling(window=252).min()
         last_date = stock_data.index[-1].date()
-        stock_data_52_high = stock_data['52 Week High'].iloc[-1].round(2)
-        stock_data_52_low = stock_data['52 Week Low'].iloc[-1].round(2)
+        stock_data_52_high = (stock_data['Adj Close'])[-252:].max().round(2)
+        stock_data_52_Low = (stock_data['Adj Close'])[-252:].min().round(2)
         cv = stock_data['Returns'].std() / stock_data['Returns'].mean()
         kurtosis_val =kurtosis(stock_data['Returns'])
         rsi = calculate_rsi(stock_data['Adj Close'].tail(252), window=14) 
@@ -240,11 +243,11 @@ def forecast_stock_returns(ticker_symbol):
             res_p21= ["Price Diff-Non Seasonal",np.average(res21).round(2),np.max(res21).round(2),np.min(res21).round(2),(((np.average(res21)-current_cmp)/current_cmp)*100).round(2)]
             res22 = [current_cmp]+ [current_cmp + sum(forecast22[:i+1]) for i in range(len(forecast22))]
             res_p22=["Price Diff Seasonal",np.average(res22).round(2),np.max(res22).round(2),np.min(res22).round(2),(((np.average(res22)-current_cmp)/current_cmp)*100).round(2)]
-            if res_p11[3]>5 and res_p21[3]>5:
+            if res_p11[4]>5 and res_p21[4]>5:
               scaled_data,lst = stk_dt(stock_data['Adj Close'].dropna())
               f = new_lstm(ticker_symbol, scaled_data, scaler,lst)
               res_p55=["LSTM Price",np.average(f).round(2),np.max(f).round(2),np.min(f).round(2),(((np.average(f)-current_cmp)/current_cmp)*100).round(2)]
-              if res_p55[3]>5:
+              if res_p55[4]>5:
                  k= [ticker_symbol,v,[res_p11,res_p12,res_p21,res_p22,res_p55],"NA",TI]
                  xs=xs+1
                  print("xs:", xs) 
