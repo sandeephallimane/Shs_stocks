@@ -192,7 +192,7 @@ for ticker_symbol in ticker_symbols:
         model = genai.GenerativeModel("models/gemini-1.0-pro")  
         j=model.generate_content(query)
         result[26] = j.text
-        if ta=0:
+        if ta == 0:
             tab()
             ta = ta+1
         conn = sqlite3.connect('sandeephallimene.db')
