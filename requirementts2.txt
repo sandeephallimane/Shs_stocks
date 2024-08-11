@@ -1,0 +1,13 @@
+numpy==1.26.4
+pandas
+yfinance
+statsmodels
+scikit-learn
+pmdarima
+datetime
+scipy
+Jinja2
+pdfkit
+wkhtmltopdf
+google-generativeai
+WeasyPrint
