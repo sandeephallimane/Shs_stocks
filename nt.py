@@ -91,7 +91,7 @@ def optimize_model(trial,scaled_data):
     msle = history.history['val_mean_squared_logarithmic_error'][-1]
     return mae, mse, rmse, msle,mape
    
-def new_lstm(ti, scaled_data, scaler,lst):
+def new_lstm(ti,scaled_data,lst):
     for filename in os.listdir():
         if filename.endswith('_study.db'):
             os.remove(filename)
@@ -121,6 +121,8 @@ def new_lstm(ti, scaled_data, scaler,lst):
         forecasted_prices.append(prediction[0, 0])
         current_data = np.append(current_data[1:], prediction[0, 0])
     forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
+    print("Stock Name:",ti)
+    print("forecasted_prices:",forecasted_prices)
     return forecasted_prices
 
 ticker_symbols=(os.getenv('TS')).split(',')
@@ -245,10 +247,14 @@ def forecast_stock_returns(ticker_symbol):
             res_p22=["Price Diff Seasonal",np.average(res22).round(2),np.max(res22).round(2),np.min(res22).round(2),(((np.average(res22)-current_cmp)/current_cmp)*100).round(2)]
             if res_p11[4]>5 and res_p21[4]>5:
               scaled_data,lst = stk_dt(stock_data['Adj Close'].dropna())
-              f = new_lstm(ticker_symbol, scaled_data, scaler,lst)
+              f = new_lstm(ticker_symbol,scaled_data,lst)
               res_p55=["LSTM Price",np.average(f).round(2),np.max(f).round(2),np.min(f).round(2),(((np.average(f)-current_cmp)/current_cmp)*100).round(2)]
               if res_p55[4]>5:
-                 k= [ticker_symbol,v,[res_p11,res_p12,res_p21,res_p22,res_p55],"NA",TI]
+                 au= fndmntl(ticker_symbol)
+                 query = "Read and summarize financial position/n"+ (((au.balance_sheet).iloc[:, :2]).dropna()).to_string() + "/n and /n "+(((au.financials).iloc[:, :2]).dropna()).to_string()+ "/n and /n "+(((au.financials).iloc[:, :2]).dropna()).to_string()
+                 model = genai.GenerativeModel("models/gemini-1.0-pro")  
+                 j=model.generate_content(query)
+                 k= [ticker_symbol,v,[res_p11,res_p12,res_p21,res_p22,res_p55],j,TI]
                  xs=xs+1
                  print("xs:", xs) 
                  return k
@@ -269,11 +275,6 @@ t =[]
 for ticker_symbol in ticker_symbols:
     result = forecast_stock_returns(ticker_symbol)
     if result != "NA":
-       a= fndmntl(result[0])
-       query = "Read and summarize financial position/n"+ (((a.balance_sheet).iloc[:, :2]).dropna()).to_string() + "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()+ "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()
-       model = genai.GenerativeModel("models/gemini-1.0-pro")  
-       j=model.generate_content(query)
-       result[3] = j.text
        forecasts.append(result)
        result= []
 
