@@ -195,7 +195,7 @@ for ticker_symbol in ticker_symbols:
         if ta == 0:
             tab()
             ta = ta+1
-        conn = sqlite3.connect('sandeephallimene.db')
+        conn = sqlite3.connect('sandeephallimane.db')
         cursor = conn.cursor()
         cursor.execute('''INSERT INTO stock_analysis (
     ticker,
