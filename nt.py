@@ -395,8 +395,7 @@ qe = {
     'margin-top': '0.75in',
     'margin-right': '0.75in',
     'margin-bottom': '0.75in',
-    'margin-left': '0.75in',
-    'border': '1px solid black'
+    'margin-left': '0.75in'
 }
 
 pdfkit.from_string(email_body, output_pdf, options=qe)
