@@ -16,10 +16,11 @@ from weasyprint import HTML, CSS
 import os
 import google.generativeai as genai
 
-conn = sqlite3.connect('sandeephallimane.db')
-cursor = conn.cursor()
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS stock_analysis (
+ta=0
+def tab()
+  conn = sqlite3.connect('sandeephallimane.db')
+  cursor = conn.cursor()
+  cursor.execute('''CREATE TABLE IF NOT EXISTS stock_analysis (
     ticker TEXT PRIMARY KEY,
     yearly_returns REAL NOT NULL,
     current_cmp REAL NOT NULL,
@@ -53,8 +54,8 @@ CREATE TABLE IF NOT EXISTS stock_analysis (
     stochastic TEXT NOT NULL,
     status TEXT NOT NULL
 )''')
-conn.commit()
-conn.close()
+  conn.commit()
+  conn.close()
 
 ticker_symbols=(os.getenv('TS')).split(',')
 print(ticker_symbols)
@@ -191,6 +192,9 @@ for ticker_symbol in ticker_symbols:
         model = genai.GenerativeModel("models/gemini-1.0-pro")  
         j=model.generate_content(query)
         result[26] = j.text
+        if(ta=0):
+            tab()
+            ta = ta+1
         conn = sqlite3.connect('sandeephallimene.db')
         cursor = conn.cursor()
         cursor.execute('''INSERT INTO stock_analysis (
