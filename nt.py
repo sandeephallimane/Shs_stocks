@@ -192,6 +192,7 @@ def fndmntl(ticker):
     
 def forecast_stock_returns(ticker_symbol):
     print(ticker_symbol)
+    global xs
     try:
       stock_data = yf.download(ticker_symbol, period='5y').dropna()
       stock_data.dropna(inplace=True)
