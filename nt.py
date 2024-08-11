@@ -26,6 +26,7 @@ from optuna.samplers import TPESampler
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import TimeSeriesSplit
 
+xs=0
 print("PROCESS STARTED")
 physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
@@ -193,7 +194,7 @@ def forecast_stock_returns(ticker_symbol):
     try:
       stock_data = yf.download(ticker_symbol, period='5y').dropna()
       stock_data.dropna(inplace=True)
-      if len(stock_data)>300:
+      if len(stock_data)>300 and xs<7:
         stock_data['Returns'] =  np.log(stock_data['Adj Close'] / stock_data['Adj Close'].shift(1))
         stock_data['Diff'] =  stock_data['Adj Close'].diff()
         stock_data.dropna(inplace=True)
@@ -243,6 +244,7 @@ def forecast_stock_returns(ticker_symbol):
               res_p55=["LSTM Price",np.average(f).round(2),np.max(f).round(2),np.min(f).round(2),(((np.average(f)-current_cmp)/current_cmp)*100).round(2)]
               if res_p55[3]>5:
                  k= [ticker_symbol,v,[res_p11,res_p12,res_p21,res_p22,res_p55],"NA",TI]
+                 xs=xs+1
                  return k
               else:
                  return "NA"   
