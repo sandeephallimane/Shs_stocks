@@ -11,3 +11,4 @@ pdfkit
 wkhtmltopdf
 google-generativeai
 WeasyPrint
+requests
