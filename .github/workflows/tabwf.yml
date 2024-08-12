@@ -48,7 +48,7 @@ jobs:
 
       - name: Commit PDF file
         run: |
-          git add stocks.txt
+          git add data.txt
           git commit -m "Add data.txt" || echo "Nothing to commit"
 
       - name: Push changes
