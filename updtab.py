@@ -15,19 +15,19 @@ from optuna.samplers import TPESampler
 from sklearn.linear_model import LinearRegression
 import os
 from sklearn.model_selection import TimeSeriesSplit
-
+import requests
 
 physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-conn = sqlite3.connect('sandeephallimane.db')
-cursor = conn.cursor()
-cursor.execute('SELECT ticker FROM stock_analysis WHERE LSTM_max = 0')
-tickers = [row[0] for row in cursor.fetchall()]
-conn.commit()
-conn.close()
-print('tickers:',tickers)
+url = "https://raw.githubusercontent.com/sandeephallimane/Shs_stocks/main/data.txt"
+response = requests.get(url)
+if response.status_code == 200:
+    data = response.text
+    lines = data.splitlines()
+else:
+    print("Failed to retrieve file")
 
 early_stopping = EarlyStopping(monitor='mean_squared_error', patience=5 )
 
@@ -129,14 +129,12 @@ def new_lstm(ti, scaled_data, scaler,lst,cmp):
     ret_p = ((avg_p-cmp)*100/cmp).round(2)
     return min_p,max_p,avg_p,ret_p
 
-for t in tickers:
+for i, line in enumerate(lines):
+    if i>10:
+        break
+    t= eval(line)
     scaler = MinMaxScaler()
-    scaled_data,lst,cmp = stk_dt(t,scaler)
-    lstm_min,lstm_max, lstm_avg, lstm_ret = new_lstm(t, scaled_data, scaler,lst,cmp)
-    conn = sqlite3.connect('sandeephallimane.db')
-    cursor = conn.cursor()
-    cursor.execute('''UPDATE stock_analysis SET LSTM_max = ?,LSTM_min = ?, LSTM_avg = ?,LSTM_ret = ?  WHERE ticker = ? ''', (lstm_max,lstm_min,lstm_avg,lstm_ret,ticker))
-    conn.commit()
-    conn.close()
-    print("Stock name:", t)
-    print("Forecasted prices:",lstm_min,lstm_max, lstm_avg, lstm_ret )
+    scaled_data,lst,cmp = stk_dt(t[0],scaler)
+    t[22],t[23], t[24], t[25] = new_lstm(t, scaled_data, scaler,lst,cmp)
+    print("Stock name:", t[0])
+    print("Forecasted prices:",t[22],t[23], t[24], t[25] )
