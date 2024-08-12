@@ -16,15 +16,18 @@ from sklearn.linear_model import LinearRegression
 import os
 from sklearn.model_selection import TimeSeriesSplit
 
+
+physical_devices = tf.config.list_physical_devices('GPU')
+if physical_devices:
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
 conn = sqlite3.connect('sandeephallimane.db')
 cursor = conn.cursor()
 cursor.execute('SELECT ticker FROM stock_analysis WHERE LSTM_max = 0')
 tickers = [row[0] for row in cursor.fetchall()]
 conn.commit()
 conn.close()
-physical_devices = tf.config.list_physical_devices('GPU')
-if physical_devices:
-    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+print('tickers:',tickers)
 
 early_stopping = EarlyStopping(monitor='mean_squared_error', patience=5 )
 
