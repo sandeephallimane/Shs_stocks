@@ -31,3 +31,21 @@ jobs:
       - name: Generate PDF
         run: 
           python updtab.py
+          
+      - name: Configure Git
+        run: |
+          git config --global user.name "sandeephallimane"
+          git config --global user.email "hssandp@gmail.com"
+
+      - name: Pull latest changes
+        run: git pull --rebase origin main
+
+      - name: Commit PDF file
+        run: |
+          git add upddata.txt
+          git commit -m "Add upddata.txt" || echo "Nothing to commit"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.MY_REPO_TOKEN }}
