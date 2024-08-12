@@ -130,7 +130,7 @@ def new_lstm(ti, scaled_data, scaler,lst,cmp):
     return min_p,max_p,avg_p,ret_p
 
 for i, line in enumerate(lines):
-    if i>10:
+    if i>8:
         break
     t= eval(line)
     scaler = MinMaxScaler()
@@ -138,3 +138,5 @@ for i, line in enumerate(lines):
     t[22],t[23], t[24], t[25] = new_lstm(t, scaled_data, scaler,lst,cmp)
     print("Stock name:", t[0])
     print("Forecasted prices:",t[22],t[23], t[24], t[25] )
+    with open('upddata.txt', 'a') as f:
+           f.write(str(t) + '\n')
