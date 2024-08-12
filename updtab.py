@@ -135,7 +135,7 @@ for i, line in enumerate(lines):
     t= eval(line)
     scaler = MinMaxScaler()
     scaled_data,lst,cmp = stk_dt(t[0],scaler)
-    t[22],t[23], t[24], t[25] = new_lstm(t, scaled_data, scaler,lst,cmp)
+    t[22],t[23], t[24], t[25] = new_lstm(t[0], scaled_data, scaler,lst,cmp)
     print("Stock name:", t[0])
     print("Forecasted prices:",t[22],t[23], t[24], t[25] )
     with open('upddata.txt', 'a') as f:
