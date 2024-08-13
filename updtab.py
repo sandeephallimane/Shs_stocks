@@ -85,7 +85,7 @@ def optimize_model(trial,scaled_data):
         y.append(scaled_data[i + int(window_size)])
     X, y = np.array(X), np.array(y)  
     model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,window_size)
-    history = model.fit(X, y, epochs=50, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
+    history = model.fit(X, y, epochs=35, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
 
     mae = history.history['val_mean_absolute_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
