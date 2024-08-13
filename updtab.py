@@ -11,6 +11,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 import optuna
 import sqlite3
+from tensorflow.keras import regularizers
 from optuna.samplers import TPESampler
 from sklearn.linear_model import LinearRegression
 import os
@@ -45,7 +46,7 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
     model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
     model.add(Dropout(dropout_rate))
     model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
-    model.add(Dense(1))
+    model.add(Dense(1, kernel_regularizer=regularizers.l2(0.01)))
     
     def combined_loss(y_true, y_pred):
         mse = tf.keras.losses.MeanSquaredError()(y_true, y_pred)
