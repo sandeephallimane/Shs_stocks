@@ -29,7 +29,7 @@ if response.status_code == 200:
 else:
     print("Failed to retrieve file")
 
-early_stopping = EarlyStopping(monitor='mean_squared_error', patience=5 )
+early_stopping = EarlyStopping(monitor='loss', patience=5 )
 
 def stk_dt(tk,scaler):
    data = yf.download(tk, period='5y')['Close'].dropna()
@@ -73,11 +73,11 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
     
 def optimize_model(trial,scaled_data):
     lstm_units = trial.suggest_int('lstm_units', 50, 200)
-    gru_units = trial.suggest_int('gru_units', 20, 200)
+    gru_units = trial.suggest_int('gru_units', 50, 200)
     dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
     batch_size = trial.suggest_int('batch_size', 32, 64)
     optimizer_idx = trial.suggest_int('optimizer_idx', 0, 2)
-    window_size = trial.suggest_int('window_size', 50, 250)
+    window_size = trial.suggest_int('window_size', 100, 200)
 
     X, y = [], []
     for i in range(len(scaled_data) - int(window_size)):
@@ -104,7 +104,7 @@ def new_lstm(ti, scaled_data, scaler,lst,cmp):
     storage = 'sqlite:///' + script_name + '_study.db'
     
     study = optuna.create_study(directions=['minimize', 'minimize','minimize','minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=TPESampler())
-    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=25, n_jobs=8)
+    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=50, n_jobs=8)
     best_trials = study.best_trials
     best_trial = best_trials[0]  # Select the first best trial
     best_model = create_model(**best_trial.params)
@@ -130,7 +130,7 @@ def new_lstm(ti, scaled_data, scaler,lst,cmp):
     return min_p,max_p,avg_p,ret_p
 
 for i, line in enumerate(lines):
-    if i>8:
+    if i>6:
         break
     t= eval(line)
     scaler = MinMaxScaler()
