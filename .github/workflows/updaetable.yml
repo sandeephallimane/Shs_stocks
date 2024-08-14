@@ -31,7 +31,9 @@ jobs:
       - name: Generate PDF
         run: 
           python updtab.py
-          
+          echo "::set-output name=a::$a"
+          echo "::set-output name=b::$b"
+
       - name: Configure Git
         run: |
           git config --global user.name "sandeephallimane"
@@ -52,3 +54,12 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.MY_REPO_TOKEN }}
+
+      - name: Retrigger workflow
+        run: |
+          sleep 300 # wait for 5 minutes
+          curl -X POST \
+            https://api.github.com/repos/sandeephallimane/Shs_stocks/actions/workflows/10389438255/dispatches \
+            -H 'Authorization: Bearer ${{ secrets.MY_REPO_TOKEN }}' \
+            -H 'Content-Type: application/json' \
+            -d '{"inputs": {} }'
