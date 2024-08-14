@@ -13,7 +13,10 @@ from sklearn.model_selection import train_test_split
 import optuna
 import sqlite3
 from tensorflow.keras import regularizers
-from optuna.samplers import TPESampler
+from optuna.samplers import TPESampler, RandomSampler, GridSampler
+from keras.regularizers import l1
+from keras.layers import BatchNormalization
+from keras.activations import relu, leaky_relu, swish
 from sklearn.linear_model import LinearRegression
 import os
 from sklearn.model_selection import TimeSeriesSplit
@@ -63,15 +66,15 @@ def stk_dt(tk,scaler):
    cmp = data.iloc[-1].round(2)
    return scaled_data,last_date,cmp
 
-def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size,loss_function):
+def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size, activation, loss_function):
     model = Sequential()
-    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
+    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1), activation=activation)))
+    model.add(BatchNormalization())
     model.add(Dropout(dropout_rate))
-    model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
-    model.add(Dense(1, kernel_regularizer=regularizers.l2(0.01)))
-          
+    model.add(Bidirectional(GRU(int(gru_units), return_sequences=True, activation=activation)))
+    model.add(Dense(1, kernel_regularizer=l1(0.01)))
     model.compile(
-        optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)],
+        optimizer=['adamw', 'nadam', 'adam'][int(optimizer_idx)],
         loss=loss_function,
         metrics=[
             'mean_absolute_error', 
@@ -79,14 +82,16 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
             'mean_absolute_percentage_error', 
             'mean_squared_logarithmic_error'        ])
     return model
-    
-def optimize_model(trial,scaled_data,lf):
-    lstm_units = trial.suggest_int('lstm_units', 50, 200)
-    gru_units = trial.suggest_int('gru_units', 50, 200)
+
+def optimize_model(trial, scaled_data, lf):
+    lstm_units = trial.suggest_int('lstm_units', 100, 200)
+    gru_units = trial.suggest_int('gru_units', 100, 150)
     dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
     batch_size = trial.suggest_int('batch_size', 32, 64)
     optimizer_idx = trial.suggest_int('optimizer_idx', 0, 2)
-    window_size = trial.suggest_int('window_size', 100, 200)
+    window_size = trial.suggest_int('window_size', 100, 150)
+    activation = trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish'])
+    activation = {'relu': relu, 'leaky_relu': leaky_relu, 'swish': swish}[activation]
 
     X, y = [], []
     for i in range(len(scaled_data) - int(window_size)):
@@ -94,17 +99,16 @@ def optimize_model(trial,scaled_data,lf):
         y.append(scaled_data[i + int(window_size)])
     X, y = np.array(X), np.array(y)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,window_size,lf)
-    history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_data=(X_test, y_test), callbacks=[early_stopping], verbose=0)
+    model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size, activation, lf)
+    history = model.fit(X_train, y_train, epochs=25, batch_size=int(batch_size), validation_data=(X_test, y_test), callbacks=[early_stopping], verbose=0)
     mae = history.history['val_mean_absolute_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
     mape = history.history['val_mean_absolute_percentage_error'][-1]
-    #mase = history.history['val_mean_absolute_scaled_error'][-1]
     rmse =  np.sqrt(mse)
     msle = history.history['val_mean_squared_logarithmic_error'][-1]
-    return mae, mse, rmse, msle,mape
-   
-def new_lstm(ti, scaled_data, scaler,lst,cmp):
+    return mae, mse, rmse, msle, mape
+
+def new_lstm(ti, scaled_data, scaler, lst, cmp):
     for filename in os.listdir():
         if filename.endswith('_study.db'):
             os.remove(filename)
@@ -113,17 +117,18 @@ def new_lstm(ti, scaled_data, scaler,lst,cmp):
     storage = 'sqlite:///' + script_name + '_study.db'
 
     lf= select_loss_function(scaled_data)
-    study = optuna.create_study(directions=['minimize', 'minimize','minimize','minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=TPESampler())
-    study.optimize(lambda trial: optimize_model(trial, scaled_data,lf), n_trials=50, n_jobs=8)
+    sampler = GridSampler()  # or RandomSampler(), TPESampler()
+    study = optuna.create_study(directions=['minimize', 'minimize','minimize','minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
+    study.optimize(lambda trial: optimize_model(trial, scaled_data, lf), n_trials=100, n_jobs=8)
     best_trials = study.best_trials
     best_trial = best_trials[0]  
-    best_model = create_model(**best_trial.params,loss_function=lf)
+    best_model = create_model(**best_trial.params, loss_function=lf)
     X, y = [], []
     for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
       X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
       y.append(scaled_data[i + int(best_trial.params['window_size'])])
     X, y = np.array(X), np.array(y)
-    best_model.fit(X, y, epochs=100, batch_size=int(best_trial.params['batch_size']),callbacks=[early_stopping], verbose=0)
+    best_model.fit(X, y, epochs=100, batch_size=int(best_trial.params['batch_size']), callbacks=[early_stopping], verbose=0)
     last_date = lst
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
     forecasted_prices = []
