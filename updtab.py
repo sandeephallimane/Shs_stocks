@@ -119,7 +119,7 @@ def new_lstm(ti, scaled_data, scaler, lst, cmp):
     lf= select_loss_function(scaled_data)
     sampler = TPESampler()   # or RandomSampler(),GridSampler() 
     study = optuna.create_study(directions=['minimize', 'minimize','minimize','minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
-    study.optimize(lambda trial: optimize_model(trial, scaled_data, lf), n_trials=100, n_jobs=8)
+    study.optimize(lambda trial: optimize_model(trial, scaled_data, lf), n_trials=30, n_jobs=8)
     best_trials = study.best_trials
     best_trial = best_trials[0]  
     best_model = create_model(**best_trial.params, loss_function=lf)
