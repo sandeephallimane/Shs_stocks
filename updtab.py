@@ -116,7 +116,7 @@ def new_lstm(ti, scaled_data, scaler,lst,cmp):
     study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=50, n_jobs=8)
     best_trials = study.best_trials
     best_trial = best_trials[0]  # Select the first best trial
-    best_model = create_model(**best_trial.params)
+    best_model = create_model(**best_trial.params,loss_function=lf)
     X, y = [], []
     for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
       X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
