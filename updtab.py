@@ -150,16 +150,16 @@ for i, line in enumerate(lines):
       break
     b = i
     t = eval(line)
-    if t[31] = 'N':
+    if t[31] == 'N':
       scaler = MinMaxScaler()
-      scaled_data,lst,cmp = stk_dt(t[0],scaler)
-      t[22],t[23], t[24], t[25] = new_lstm(t[0], scaled_data, scaler,lst,cmp)
+      scaled_data, lst, cmp = stk_dt(t[0], scaler)
+      t[22], t[23], t[24], t[25] = new_lstm(t[0], scaled_data, scaler, lst, cmp)
       t[31] = 'Y'
       print("Stock name:", t[0])
-      print("Forecasted prices:",t[22],t[23], t[24], t[25] )
-      c= c+1
+      print("Forecasted prices:", t[22], t[23], t[24], t[25])
+      c = c + 1
     with open('upddata.txt', 'a') as f:
-        f.write(str(t) + '\n')
+      f.write(str(t) + '\n')
 print(a)
 print(b)
 os.environ['a'] = str(a)
