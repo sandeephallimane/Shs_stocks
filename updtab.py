@@ -79,8 +79,7 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
             'mean_squared_logarithmic_error'        ])
     return model
     
-def optimize_model(trial,scaled_data):
-    lf= select_loss_function(scaled_data)
+def optimize_model(trial,scaled_data,lf):
     lstm_units = trial.suggest_int('lstm_units', 50, 200)
     gru_units = trial.suggest_int('gru_units', 50, 200)
     dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
@@ -111,11 +110,12 @@ def new_lstm(ti, scaled_data, scaler,lst,cmp):
     script_name= ti
     study_name = script_name + '_study'
     storage = 'sqlite:///' + script_name + '_study.db'
-    
+
+    lf= select_loss_function(scaled_data)
     study = optuna.create_study(directions=['minimize', 'minimize','minimize','minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=TPESampler())
-    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=50, n_jobs=8)
+    study.optimize(lambda trial: optimize_model(trial, scaled_data,lf), n_trials=50, n_jobs=8)
     best_trials = study.best_trials
-    best_trial = best_trials[0]  # Select the first best trial
+    best_trial = best_trials[0]  
     best_model = create_model(**best_trial.params,loss_function=lf)
     X, y = [], []
     for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
