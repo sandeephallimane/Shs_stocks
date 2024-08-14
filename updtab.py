@@ -28,6 +28,7 @@ response = requests.get(url)
 if response.status_code == 200:
     data = response.text
     lines = data.splitlines()
+    a = len(lines)
 else:
     print("Failed to retrieve file")
 
@@ -137,15 +138,26 @@ def new_lstm(ti, scaled_data, scaler,lst,cmp):
     avg_p = np.mean(forecasted_prices).round(2)
     ret_p = ((avg_p-cmp)*100/cmp).round(2)
     return min_p,max_p,avg_p,ret_p
-
+b=0
+c=0
 for i, line in enumerate(lines):
-    if i>6:
-        break
+    if c>3
+      break
+    b= i
     t= eval(line)
-    scaler = MinMaxScaler()
-    scaled_data,lst,cmp = stk_dt(t[0],scaler)
-    t[22],t[23], t[24], t[25] = new_lstm(t[0], scaled_data, scaler,lst,cmp)
-    print("Stock name:", t[0])
-    print("Forecasted prices:",t[22],t[23], t[24], t[25] )
+    if t[31] = 'N'
+      scaler = MinMaxScaler()
+      scaled_data,lst,cmp = stk_dt(t[0],scaler)
+      t[22],t[23], t[24], t[25] = new_lstm(t[0], scaled_data, scaler,lst,cmp)
+      t[31] = 'Y'
+      print("Stock name:", t[0])
+      print("Forecasted prices:",t[22],t[23], t[24], t[25] )
+      c= c+1
     with open('upddata.txt', 'a') as f:
-           f.write(str(t) + '\n')
+        f.write(str(t) + '\n')
+
+print(a)
+print(b)
+os.environ['a'] = str(a)
+os.environ['b'] = str(b)
+
