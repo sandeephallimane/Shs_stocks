@@ -62,20 +62,6 @@ def stk_dt(tk,scaler):
    cmp = data.iloc[-1].round(2)
    return scaled_data,last_date,cmp
 
-  def combined_loss(y_true, y_pred):
-        mse = tf.keras.losses.MeanSquaredError()(y_true, y_pred)
-        mae = tf.keras.losses.MeanAbsoluteError()(y_true, y_pred)
-        msle = tf.keras.losses.MeanSquaredLogarithmicError()(y_true, y_pred)
-        return 0.6 * mse + 0.3 * mae + 0.1 * msle
-
-    def mean_absolute_scaled_error(y_true, y_pred):
-      mean_true = tf.reduce_mean(y_true, axis=0, keepdims=True)
-      return tf.cond(
-        tf.equal(mean_true, 0),
-        lambda: tf.reduce_mean(tf.abs(y_true - y_pred), axis=0),
-        lambda: tf.reduce_mean(tf.abs(y_true - y_pred), axis=0) / tf.reduce_mean(tf.abs(y_true - mean_true), axis=0)
-    )
-
 def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size,loss_function):
     model = Sequential()
     model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
