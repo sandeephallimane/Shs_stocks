@@ -5,8 +5,9 @@ import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Bidirectional, Dense, Dropout, GRU
-from tensorflow.keras.losses import MeanSquaredError, MeanAbsoluteError, MeanSquaredLogarithmicError
+from tensorflow.keras.losses import MeanSquaredError, MeanAbsoluteError, MeanSquaredLogarithmicError,Huber
 from tensorflow.keras.metrics import MeanAbsoluteError, MeanSquaredError,MeanAbsolutePercentageError , MeanSquaredLogarithmicError
+from scipy import stats
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 import optuna
@@ -33,12 +34,15 @@ else:
 early_stopping = EarlyStopping(monitor='loss', patience=5 )
 
 def select_loss_function(scaled_data):
-    # Calculate data statistics
     mean = np.mean(scaled_data)
     std = np.std(scaled_data)
     range = np.ptp(scaled_data)
     skewness = scipy.stats.skew(scaled_data)
     kurtosis = scipy.stats.kurtosis(scaled_data)
+    mean_squared_error = MeanSquaredError()
+    mean_absolute_error = MeanAbsoluteError()
+    huber_loss = Huber()
+    mean_squared_logarithmic_error = MeanSquaredLogarithmicError()
     
     if mean < 0.1 and std < 0.1:   
         return 'mean_squared_error'
@@ -58,16 +62,7 @@ def stk_dt(tk,scaler):
    cmp = data.iloc[-1].round(2)
    return scaled_data,last_date,cmp
 
-
-
-def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size):
-    model = Sequential()
-    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
-    model.add(Dropout(dropout_rate))
-    model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
-    model.add(Dense(1, kernel_regularizer=regularizers.l2(0.01)))
-    
-    def combined_loss(y_true, y_pred):
+  def combined_loss(y_true, y_pred):
         mse = tf.keras.losses.MeanSquaredError()(y_true, y_pred)
         mae = tf.keras.losses.MeanAbsoluteError()(y_true, y_pred)
         msle = tf.keras.losses.MeanSquaredLogarithmicError()(y_true, y_pred)
@@ -80,10 +75,17 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
         lambda: tf.reduce_mean(tf.abs(y_true - y_pred), axis=0),
         lambda: tf.reduce_mean(tf.abs(y_true - y_pred), axis=0) / tf.reduce_mean(tf.abs(y_true - mean_true), axis=0)
     )
+
+def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size,loss_function):
+    model = Sequential()
+    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1))))
+    model.add(Dropout(dropout_rate))
+    model.add(Bidirectional(GRU(int(gru_units), return_sequences=True)))
+    model.add(Dense(1, kernel_regularizer=regularizers.l2(0.01)))
           
     model.compile(
         optimizer=['adam', 'rmsprop', 'sgd'][int(optimizer_idx)],
-        loss='mean_squared_error',
+        loss=loss_function,
         metrics=[
             'mean_absolute_error', 
             'mean_squared_error', 
@@ -92,6 +94,7 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
     return model
     
 def optimize_model(trial,scaled_data):
+    lf= select_loss_function(scaled_data)
     lstm_units = trial.suggest_int('lstm_units', 50, 200)
     gru_units = trial.suggest_int('gru_units', 50, 200)
     dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
@@ -105,7 +108,7 @@ def optimize_model(trial,scaled_data):
         y.append(scaled_data[i + int(window_size)])
     X, y = np.array(X), np.array(y)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,window_size)
+    model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,window_size,lf)
     history = model.fit(X_train, y_train, epochs=50, batch_size=int(batch_size), validation_data=(X_test, y_test), callbacks=[early_stopping], verbose=0)
     mae = history.history['val_mean_absolute_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
