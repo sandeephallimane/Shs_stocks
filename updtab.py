@@ -146,10 +146,10 @@ def new_lstm(ti, scaled_data, scaler, lst, cmp):
 b=0
 c=0
 for i, line in enumerate(lines):
-    if c>3
+    if c>3:
       break
-    b= i
-    t= eval(line)
+    b = i
+    t = eval(line)
     if t[31] = 'N'
       scaler = MinMaxScaler()
       scaled_data,lst,cmp = stk_dt(t[0],scaler)
@@ -160,7 +160,6 @@ for i, line in enumerate(lines):
       c= c+1
     with open('upddata.txt', 'a') as f:
         f.write(str(t) + '\n')
-
 print(a)
 print(b)
 os.environ['a'] = str(a)
