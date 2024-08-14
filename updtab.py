@@ -84,7 +84,8 @@ def optimize_model(trial,scaled_data):
     for i in range(len(scaled_data) - int(window_size)):
         X.append(scaled_data[i:i + int(window_size)])
         y.append(scaled_data[i + int(window_size)])
-    X, y = np.array(X), np.array(y)  
+    X, y = np.array(X), np.array(y)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,window_size)
     history = model.fit(X, y, epochs=35, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping], verbose=0)
 
