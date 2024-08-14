@@ -32,6 +32,25 @@ else:
 
 early_stopping = EarlyStopping(monitor='loss', patience=5 )
 
+def select_loss_function(scaled_data):
+    # Calculate data statistics
+    mean = np.mean(scaled_data)
+    std = np.std(scaled_data)
+    range = np.ptp(scaled_data)
+    skewness = scipy.stats.skew(scaled_data)
+    kurtosis = scipy.stats.kurtosis(scaled_data)
+    
+    if mean < 0.1 and std < 0.1:   
+        return 'mean_squared_error'
+    elif mean < 1 and std < 1:  
+        return 'mean_absolute_error'
+    elif range > 1 and skewness > 1:  
+        return 'huber_loss'
+    elif kurtosis > 1:  
+        return 'mean_squared_logarithmic_error'
+    else:  
+        return 'mean_absolute_error' 
+        
 def stk_dt(tk,scaler):
    data = yf.download(tk, period='5y')['Close'].dropna()
    last_date = pd.to_datetime(data.index[-1].to_pydatetime().date())
