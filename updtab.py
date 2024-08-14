@@ -150,7 +150,7 @@ for i, line in enumerate(lines):
       break
     b = i
     t = eval(line)
-    if t[31] = 'N'
+    if t[31] = 'N':
       scaler = MinMaxScaler()
       scaled_data,lst,cmp = stk_dt(t[0],scaler)
       t[22],t[23], t[24], t[25] = new_lstm(t[0], scaled_data, scaler,lst,cmp)
