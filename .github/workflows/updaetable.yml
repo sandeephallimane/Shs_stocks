@@ -38,7 +38,10 @@ jobs:
           git config --global user.email "hssandp@gmail.com"
 
       - name: Pull latest changes
-        run: git pull --rebase origin main
+        run: |
+          git stash
+          git pull --rebase origin main
+          git stash pop
 
       - name: Commit PDF file
         run: |
