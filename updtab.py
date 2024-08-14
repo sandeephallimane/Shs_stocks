@@ -117,7 +117,7 @@ def new_lstm(ti, scaled_data, scaler, lst, cmp):
     storage = 'sqlite:///' + script_name + '_study.db'
 
     lf= select_loss_function(scaled_data)
-    sampler = GridSampler()  # or RandomSampler(), TPESampler()
+    sampler = TPESampler()   # or RandomSampler(),GridSampler() 
     study = optuna.create_study(directions=['minimize', 'minimize','minimize','minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
     study.optimize(lambda trial: optimize_model(trial, scaled_data, lf), n_trials=100, n_jobs=8)
     best_trials = study.best_trials
