@@ -57,9 +57,9 @@ jobs:
 
       - name: Retrigger workflow
         run: |
-          sleep 300 # wait for 5 minutes
+          sleep 300 
           curl -X POST \
-            https://api.github.com/repos/sandeephallimane/Shs_stocks/actions/workflows/10389438255/dispatches \
-            -H 'Authorization: Bearer ${{ secrets.MY_REPO_TOKEN }}' \
-            -H 'Content-Type: application/json' \
-            -d '{"inputs": {} }'
+           https://api.github.com/repos/sandeephallimane/Shs_stocks/actions/workflows/111935311/dispatches \
+          -H 'Authorization: Bearer ${{ secrets.MY_REPO_TOKEN }}' \
+          -H 'Content-Type: application/json' \
+          -d '{"inputs": {} }'
