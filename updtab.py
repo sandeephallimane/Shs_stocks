@@ -45,27 +45,20 @@ def download_file(url, filename):
         if response.status_code == 200:
             with open(filename, 'w') as file:
                 file.write(response.text)
+            data = response.text
+            lines = data.splitlines()
+            b = len(lines)
             print(f"File downloaded successfully: {filename}")
+            return b
         else:
             # If the file does not exist, create an empty file
             with open(filename, 'w') as file:
                 pass
             print(f"File not found. Created empty file: {filename}")
-    
+            b= 0
+            return b
     except requests.exceptions.RequestException as e:
         print(f"Error downloading file: {e}")
-
-def count_lines(filename):
-    try:
-        with open(filename, 'r') as file:
-            ln = sum(1 for line in file)
-            print(f"Number of lines in the file: {lines}")
-    except FileNotFoundError:
-            ln= 0
-            print("File not found.")
-
-    return ln
-
 
 url2 = "https://raw.githubusercontent.com/sandeephallimane/Shs_stocks/main/upddata.txt"
 filename2 = "upddata.txt"
@@ -179,17 +172,15 @@ def new_lstm(ti, scaled_data, scaler, lst, cmp):
     avg_p = np.mean(forecasted_prices).round(2)
     ret_p = ((avg_p-cmp)*100/cmp).round(2)
     return min_p,max_p,avg_p,ret_p
-b=0
+
 c=0
 
-download_file(url2, filename2)
-ln= count_lines(filename2)
+b= download_file(url2, filename2)
 
 for i, line in enumerate(lines):
     if c>1:
       break
-    b = i
-    if i>ln:
+    if i>b:
       t = eval(line)
       scaler = MinMaxScaler()
       scaled_data, lst, cmp = stk_dt(t[0], scaler)
@@ -198,8 +189,8 @@ for i, line in enumerate(lines):
       print("Stock name:", t[0])
       print("Forecasted prices:", t[22], t[23], t[24], t[25])
       c = c + 1
-    with open('upddata.txt', 'a') as f:
-      f.write(str(t) + '\n')
+      with open('upddata.txt', 'a') as f:
+        f.write(str(t) + '\n')
 print(a)
 print(b)
 os.environ['a'] = str(a)
