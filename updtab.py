@@ -188,6 +188,7 @@ ln= count_lines(filename2)
 for i, line in enumerate(lines):
     if c>1:
       break
+    b = i
     if i>ln:
       t = eval(line)
       scaler = MinMaxScaler()
