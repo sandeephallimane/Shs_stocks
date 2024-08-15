@@ -161,11 +161,14 @@ def new_lstm(ti, scaled_data, scaler, lst, cmp):
     last_date = lst
     forecast_dates = pd.date_range(start=last_date, periods=126, freq='D')
     forecasted_prices = []
-    current_data = scaled_data[-int(best_trial.params['window_size']):]
+    window_size = int(best_trial.params['window_size'])
+    current_data = scaled_data[-window_size:]
     for date in forecast_dates:
-        prediction = best_model.predict(current_data.reshape(1, int(best_trial.params['window_size']), 1))[:, -1, :]
-        forecasted_prices.append(prediction[0, 0])
-        current_data = np.append(current_data[1:], prediction[0, 0])
+      current_data_reshaped = current_data.reshape(1, window_size, 1)
+      prediction = best_model.predict(current_data_reshaped)
+      forecasted_price = prediction[0, -1, 0]  # Check model output shape
+      forecasted_prices.append(forecasted_price)
+      current_data = np.append(current_data[1:], forecasted_price)
     forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
     min_p = np.min(forecasted_prices).round(2)
     max_p = np.max(forecasted_prices).round(2)
