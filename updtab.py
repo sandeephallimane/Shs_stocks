@@ -21,6 +21,7 @@ from sklearn.linear_model import LinearRegression
 import os
 from sklearn.model_selection import TimeSeriesSplit
 import requests
+import ast
 
 physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
@@ -175,7 +176,7 @@ def new_lstm(ti, scaled_data, scaler, lst, cmp):
 
 b= download_file(url2, filename2)
 if a>b:
-  t=evaluate(lines)[b]
+  t = ast.literal_eval(lines[b])
   print("Stock name:", t[0])
   scaler = MinMaxScaler()
   scaled_data, lst, cmp = stk_dt(t[0], scaler)
