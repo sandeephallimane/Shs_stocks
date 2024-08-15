@@ -38,7 +38,6 @@ else:
 
 def download_file(url, filename):
     try:
-        # Send a GET request to the URL
         response = requests.get(url)
         
         # If the file exists, save it to the local directory
@@ -173,24 +172,18 @@ def new_lstm(ti, scaled_data, scaler, lst, cmp):
     ret_p = ((avg_p-cmp)*100/cmp).round(2)
     return min_p,max_p,avg_p,ret_p
 
-c=0
 
 b= download_file(url2, filename2)
-
-for i, line in enumerate(lines):
-    if c>1:
-      break
-    if i>b:
-      t = eval(line)
-      scaler = MinMaxScaler()
-      scaled_data, lst, cmp = stk_dt(t[0], scaler)
-      t[22], t[23], t[24], t[25] = new_lstm(t[0], scaled_data, scaler, lst, cmp)
-      t[31] = 'Y'
-      print("Stock name:", t[0])
-      print("Forecasted prices:", t[22], t[23], t[24], t[25])
-      c = c + 1
-      with open('upddata.txt', 'a') as f:
-        f.write(str(t) + '\n')
+if a>b:
+  t=evaluate(lines)[b]
+  print("Stock name:", t[0])
+  scaler = MinMaxScaler()
+  scaled_data, lst, cmp = stk_dt(t[0], scaler)
+  t[22], t[23], t[24], t[25] = new_lstm(t[0], scaled_data, scaler, lst, cmp)
+  t[31] = 'Y'
+  print("Forecasted prices:", t[22], t[23], t[24], t[25])
+  with open('upddata.txt', 'a') as f:
+    f.write(str(t) + '\n')
 print(a)
 print(b)
 os.environ['a'] = str(a)
