@@ -182,7 +182,7 @@ def new_lstm(ti, scaled_data, scaler, lst, cmp):
 b=0
 c=0
 
-download_file(url2, filename)
+download_file(url2, filename2)
 ln= count_lines(filename2)
 
 for i, line in enumerate(lines):
