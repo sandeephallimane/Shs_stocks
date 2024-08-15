@@ -35,6 +35,42 @@ if response.status_code == 200:
 else:
     print("Failed to retrieve file")
 
+
+def download_file(url, filename):
+    try:
+        # Send a GET request to the URL
+        response = requests.get(url)
+        
+        # If the file exists, save it to the local directory
+        if response.status_code == 200:
+            with open(filename, 'w') as file:
+                file.write(response.text)
+            print(f"File downloaded successfully: {filename}")
+        else:
+            # If the file does not exist, create an empty file
+            with open(filename, 'w') as file:
+                pass
+            print(f"File not found. Created empty file: {filename}")
+    
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading file: {e}")
+
+def count_lines(filename):
+    try:
+        with open(filename, 'r') as file:
+            ln = sum(1 for line in file)
+            print(f"Number of lines in the file: {lines}")
+    except FileNotFoundError:
+            ln= 0
+            print("File not found.")
+
+    return ln
+
+
+url2 = "https://raw.githubusercontent.com/sandeephallimane/Shs_stocks/main/upddata.txt"
+filename2 = "upddata.txt"
+
+
 early_stopping = EarlyStopping(monitor='loss', patience=5 )
 
 def select_loss_function(scaled_data):
@@ -145,12 +181,15 @@ def new_lstm(ti, scaled_data, scaler, lst, cmp):
     return min_p,max_p,avg_p,ret_p
 b=0
 c=0
+
+download_file(url2, filename)
+ln= count_lines(filename2)
+
 for i, line in enumerate(lines):
-    if c>3:
+    if c>1:
       break
-    b = i
-    t = eval(line)
-    if t[31] == 'N':
+    if i>ln:
+      t = eval(line)
       scaler = MinMaxScaler()
       scaled_data, lst, cmp = stk_dt(t[0], scaler)
       t[22], t[23], t[24], t[25] = new_lstm(t[0], scaled_data, scaler, lst, cmp)
