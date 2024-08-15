@@ -54,11 +54,11 @@ jobs:
 
       - name: Retrigger workflow
         run: |
-         sleep 300
-         if [ $a -gt $b ]; then
-           curl -X POST \
-           https://api.github.com/repos/sandeephallimane/Shs_stocks/actions/workflows/111935311/dispatches \
-           -H 'Authorization: Bearer ${{ secrets.MY_REPO_TOKEN }}' \
-           -H 'Content-Type: application/json' \
-           -d '{"inputs": {} }'
-         fi
+          sleep 300
+          if [ $a -gt $b ]; then
+            curl -X POST \
+            https://api.github.com/repos/sandeephallimane/Shs_stocks/actions/workflows/111935311/dispatches \
+            -H 'Authorization: Bearer ${{ secrets.MY_REPO_TOKEN }}' \
+            -H 'Content-Type: application/json' \
+            -d '{"ref": "main", "inputs": {} }'
+             fi
