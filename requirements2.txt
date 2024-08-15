@@ -17,3 +17,4 @@ wkhtmltopdf
 google-generativeai
 WeasyPrint
 requests
+ast
