@@ -41,9 +41,15 @@ jobs:
 
       - name: Pull latest changes
         run: |
-          git stash
+          set -o errexit  # Exit immediately if a command exits with a non-zero status
+          git stash || echo "No local changes to stash"
           git pull --rebase origin main
-          git stash pop
+          if git stash list | grep -q "stash@{0}"; then
+            git stash pop || echo "No stash entries found"
+          else
+            echo "No stash entries to pop"
+          fi
+          shell: /bin/bash
 
       - name: Commit PDF file
         run: |
