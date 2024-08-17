@@ -130,7 +130,7 @@ def optimize_model(trial, scaled_data, lf):
     X_train, X_val_test, y_train, y_val_test = train_test_split(X, y, test_size=0.2, random_state=42)
     X_val, X_test, y_val, y_test = train_test_split(X_val_test, y_val_test, test_size=0.5, random_state=42)
     model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size, activation, lf)
-    history = model.fit(X_train, y_train, epochs=20, batch_size=int(batch_size), validation_data=(X_val, y_val), callbacks=[early_stopping], verbose=0)
+    history = model.fit(X_train, y_train, epochs=20, batch_size=int(batch_size),validation_split = 0.2, callbacks=[early_stopping], verbose=0)
     mae = history.history['val_mean_absolute_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
     mape = history.history['val_mean_absolute_percentage_error'][-1]
