@@ -89,7 +89,7 @@ def select_loss_function(scaled_data):
 def stk_dt(tk):
    data = yf.download(tk, period='5y')['Close'].dropna()
    scaler = MinMaxScaler(feature_range=(0, 1))
-   scaled_data = scaler.fit_transform(data) 
+   scaled_data = scaler.fit_transform(data.values.reshape(-1, 1)) 
    cmp = data.iloc[-1].round(2)
    return scaled_data,cmp
 
@@ -145,7 +145,7 @@ def new_lstm(ti, scaled_data,cmp):
     lf= select_loss_function(scaled_data)
     sampler = TPESampler()   #RandomSampler(),GridSampler() 
     study = optuna.create_study(directions=['minimize', 'minimize','minimize','minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
-    study.optimize(lambda trial: optimize_model(trial, scaled_data, lf), n_trials=30, n_jobs=8)
+    study.optimize(lambda trial: optimize_model(trial, scaled_data, lf), n_trials=5, n_jobs=8)
     best_trials = study.best_trials
     best_trial = best_trials[0]  
     best_model = create_model(**best_trial.params, loss_function=lf)
@@ -155,7 +155,7 @@ def new_lstm(ti, scaled_data,cmp):
       X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
       y.append(scaled_data[i + int(best_trial.params['window_size'])])
     X, y = np.array(X), np.array(y)
-    history = best_model.fit(X, y, epochs=100, batch_size=int(best_trial.params['batch_size']),validation_split = 0.2, callbacks=[early_stopping], verbose=0)
+    history = best_model.fit(X, y, epochs=10, batch_size=int(best_trial.params['batch_size']),validation_split = 0.2, callbacks=[early_stopping], verbose=0)
     forecast_period = 126
     forecasted_prices = []
     window_size = int(best_trial.params['window_size'])
@@ -189,4 +189,3 @@ print(a)
 print(b)
 os.environ['a'] = str(a)
 os.environ['b'] = str(b)
-
