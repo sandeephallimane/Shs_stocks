@@ -39,9 +39,7 @@ else:
 
 def download_file(url, filename):
     try:
-        response = requests.get(url)
-        
-        # If the file exists, save it to the local directory
+        response = requests.get(url)        
         if response.status_code == 200:
             with open(filename, 'w') as file:
                 file.write(response.text)
@@ -138,13 +136,14 @@ def optimize_model(trial, scaled_data, lf):
     msle = history.history['val_mean_squared_logarithmic_error'][-1]
     return mae, mse, rmse, msle, mape
 
-def new_lstm(ti, scaled_data, scaler, lst, cmp):
+def new_lstm(ti, scaled_data,cmp):
     script_name= ti
     study_name = script_name + '_study'
     storage = 'sqlite:///' + script_name + '_study.db'
 
+    scaler = MinMaxScaler(feature_range=(0, 1))
     lf= select_loss_function(scaled_data)
-    sampler = TPESampler()   # or RandomSampler(),GridSampler() 
+    sampler = TPESampler()   #RandomSampler(),GridSampler() 
     study = optuna.create_study(directions=['minimize', 'minimize','minimize','minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
     study.optimize(lambda trial: optimize_model(trial, scaled_data, lf), n_trials=30, n_jobs=8)
     best_trials = study.best_trials
@@ -156,7 +155,7 @@ def new_lstm(ti, scaled_data, scaler, lst, cmp):
       X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
       y.append(scaled_data[i + int(best_trial.params['window_size'])])
     X, y = np.array(X), np.array(y)
-    history = best_model.fit(X, y, epochs=100, batch_size=int(best_trial.params['batch_size']), callbacks=[early_stopping], verbose=0)
+    history = best_model.fit(X, y, epochs=100, batch_size=int(best_trial.params['batch_size']),validation_split = 0.2, callbacks=[early_stopping], verbose=0)
     forecast_period = 126
     forecasted_prices = []
     window_size = int(best_trial.params['window_size'])
@@ -176,14 +175,12 @@ def new_lstm(ti, scaled_data, scaler, lst, cmp):
     ret_p = ((avg_p-cmp)*100/cmp).round(2)
     return min_p,max_p,avg_p,ret_p
 
-
 b= download_file(url2, filename2)
 if a>b:
   t = ast.literal_eval(lines[b])
   print("Stock name:", t[0])
-  scaler = MinMaxScaler()
-  scaled_data, lst, cmp = stk_dt(t[0], scaler)
-  t[22], t[23], t[24], t[25] = new_lstm(t[0], scaled_data, scaler, lst, cmp)
+  scaled_data,cmp = stk_dt(t[0])
+  t[22], t[23], t[24], t[25] = new_lstm(t[0], scaled_data,cmp)
   t[31] = 'Y'
   print("Forecasted prices:", t[22], t[23], t[24], t[25])
   with open('upddata.txt', 'a') as f:
