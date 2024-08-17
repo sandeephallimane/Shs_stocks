@@ -139,9 +139,6 @@ def optimize_model(trial, scaled_data, lf):
     return mae, mse, rmse, msle, mape
 
 def new_lstm(ti, scaled_data, scaler, lst, cmp):
-    for filename in os.listdir():
-        if filename.endswith('_study.db'):
-            os.remove(filename)
     script_name= ti
     study_name = script_name + '_study'
     storage = 'sqlite:///' + script_name + '_study.db'
@@ -153,6 +150,7 @@ def new_lstm(ti, scaled_data, scaler, lst, cmp):
     best_trials = study.best_trials
     best_trial = best_trials[0]  
     best_model = create_model(**best_trial.params, loss_function=lf)
+    print("best_model.summary:",best_model.summary()) 
     X, y = [], []
     for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
       X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
