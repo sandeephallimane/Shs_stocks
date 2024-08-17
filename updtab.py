@@ -128,7 +128,7 @@ def optimize_model(trial, scaled_data, lf):
     X_train, X_val_test, y_train, y_val_test = train_test_split(X, y, test_size=0.2, random_state=42)
     X_val, X_test, y_val, y_test = train_test_split(X_val_test, y_val_test, test_size=0.5, random_state=42)
     model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size, activation, lf)
-    history = model.fit(X_train, y_train, epochs=20, batch_size=int(batch_size), validation_data=(X_val, y_val), callbacks=[early_stopping], verbose=0)
+    history = model.fit(X_train, y_train, epochs=20, batch_size=int(batch_size), callbacks=[early_stopping], verbose=0)
     mae = history.history['val_mean_absolute_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
     mape = history.history['val_mean_absolute_percentage_error'][-1]
@@ -160,12 +160,12 @@ def new_lstm(ti, scaled_data,cmp):
     forecasted_prices = []
     window_size = int(best_trial.params['window_size'])
     current_data = scaled_data[-window_size:]
+    forecasted_prices = []
+    current_data = scaled_data[-window_size:]
     for _ in range(forecast_period):
       current_data_reshaped = current_data.reshape(1, window_size, 1)
       prediction = best_model.predict(current_data_reshaped)
-      print("prediction:",prediction)
-      print("prediction:",prediction.shape)
-      forecasted_price = prediction[0, 0]
+      forecasted_price = prediction[0, 0]  
       forecasted_prices.append(forecasted_price)
       current_data = np.append(current_data[1:], forecasted_price)
     forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
