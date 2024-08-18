@@ -10,7 +10,7 @@ from tensorflow.keras.metrics import MeanAbsoluteError, MeanSquaredError,MeanAbs
 from scipy import stats
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.optimizers import Adam, RMSprop, SGD
+from tensorflow.keras.optimizers import Adam, RMSprop, SGD, AdamW, Nadam
 import optuna
 import sqlite3
 from optuna.trial import Trial
@@ -93,7 +93,21 @@ def stk_dt(tk):
    data = yf.download(tk, period='5y')['Close'].dropna()
    return data
 
-def create_model(trial, window_size):
+mean_squared_error = MeanSquaredError()
+mean_absolute_error = MeanAbsoluteError()
+huber_loss = Huber()
+loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanAbsoluteError(), tf.keras.losses.Huber()]
+loss_function_categories = list(range(len(loss_functions)))
+loss_categories = ['mse', 'mae', 'huber']
+loss_functions_dict = {
+        'mse': tf.keras.losses.MeanSquaredError(),
+        'mae': tf.keras.losses.MeanAbsoluteError(),
+        'huber': tf.keras.losses.Huber()
+    }
+def create_model(trial, window_size, loss_functions):
+    loss_name = trial.suggest_categorical('loss_function', loss_categories)
+    loss = loss_functions_dict[loss_name]
+    print(loss)
     model = Sequential()
     model.add(Bidirectional(LSTM(int(trial.suggest_int('lstm_units', 50, 200)), 
                                   return_sequences=True, 
@@ -110,11 +124,10 @@ def create_model(trial, window_size):
                                   recurrent_dropout=trial.suggest_categorical('recurrent_dropout', [0.2, 0.3, 0.4]))))
     model.add(Dropout(trial.suggest_float('dropout_rate', 0.1, 0.5)))
     model.add(Dense(1, kernel_regularizer=l2(trial.suggest_float('l2', 0.01, 0.1))))
-    
     optimizers = [Adam(), RMSprop(), SGD(), AdamW(), Nadam()]
     model.compile(
         optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 4)],
-        loss=trial.suggest_categorical('loss_function', ['mean_squared_error', 'mean_absolute_error', 'huber_loss']),
+        loss='mean_squared_error',
         metrics=['mean_squared_error', 'mean_absolute_error']
     )
     
@@ -130,15 +143,14 @@ def optimize_model(trial, scaled_data):
         y.append(scaled_data[i + int(window_size)])
     X, y = np.array(X), np.array(y)
     
-    model = create_model(trial, window_size)
+    model = create_model(trial, window_size, loss_functions)
     
     early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-    model_checkpoint = ModelCheckpoint('best_model.keras', monitor='val_loss', save_best_only=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
     
     history = model.fit(X, y, epochs=50, batch_size=int(batch_size), 
                         validation_split=trial.suggest_categorical('validation_split', [0.2, 0.3, 0.4]), 
-                        callbacks=[early_stopping, model_checkpoint, reduce_lr], 
+                        callbacks=[early_stopping, reduce_lr], 
                         verbose=0)
     
     mse = history.history['val_mean_squared_error'][-1]
@@ -146,7 +158,7 @@ def optimize_model(trial, scaled_data):
 
 def new_lstm(ti, data, cmp):
     script_name = ti
-    study_name = script_name + '_study'
+    study_name = script_name + '1_study'
     storage = 'sqlite:///' + script_name + '_study.db'
 
     scaler = MinMaxScaler(feature_range=(0, 1))
@@ -157,7 +169,7 @@ def new_lstm(ti, data, cmp):
     best_trials = study.best_trials
     best_trial = best_trials[0]  
     print("best_trial.params:", best_trial.params) 
-    best_model = create_model(best_trial, int(best_trial.params['window_size']))
+    best_model = create_model(best_trial, int(best_trial.params['window_size']), loss_functions)
     print("best_model.summary:", best_model.summary()) 
     X, y = [], []
     for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
