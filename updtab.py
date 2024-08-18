@@ -101,7 +101,7 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
     model.compile(
         optimizer=['adamw', 'nadam', 'adam'][int(optimizer_idx)],
         loss=loss_function,
-        metrics='mean_squared_error')
+        metrics=['mean_squared_error'])
     return model
 
 def optimize_model(trial, scaled_data, lf):
