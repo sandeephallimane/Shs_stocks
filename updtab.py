@@ -108,7 +108,7 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
     )
     
     early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-    model_checkpoint = ModelCheckpoint('best_model.h5', monitor='val_loss', save_best_only=True)
+    model_checkpoint = ModelCheckpoint('best_model.keras', monitor='val_loss', save_best_only=True)
     return model
 
 def optimize_model(trial, scaled_data, lf):
