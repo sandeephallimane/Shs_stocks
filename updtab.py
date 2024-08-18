@@ -4,18 +4,19 @@ import numpy as np
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Bidirectional, Dense, Dropout, GRU
+from tensorflow.keras.layers import Bidirectional, LSTM, GRU, Dense, Dropout, BatchNormalization
 from tensorflow.keras.losses import MeanSquaredError, MeanAbsoluteError, MeanSquaredLogarithmicError,Huber
 from tensorflow.keras.metrics import MeanAbsoluteError, MeanSquaredError,MeanAbsolutePercentageError , MeanSquaredLogarithmicError
 from scipy import stats
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.optimizers import Adam, RMSprop, SGD
 import optuna
 import sqlite3
+from optuna.trial import Trial
 from sklearn.preprocessing import RobustScaler
 from tensorflow.keras import regularizers
-from optuna.samplers import TPESampler, RandomSampler, GridSampler
+from optuna import create_study, TPESampler
 from keras.regularizers import l1,l2
 from keras.layers import BatchNormalization
 from keras.activations import relu, leaky_relu, swish
@@ -63,7 +64,7 @@ def download_file(url, filename):
 url2 = "https://raw.githubusercontent.com/sandeephallimane/Shs_stocks/main/upddata.txt"
 filename2 = "upddata.txt"
 
-early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+early_stopping = EarlyStopping(monitor='val_loss', patience=10)
 
 def select_loss_function(scaled_data):
     mean = np.mean(scaled_data)
@@ -93,34 +94,34 @@ def stk_dt(tk):
 
 def create_model(trial, window_size):
     model = Sequential()
-    model.add(Bidirectional(LSTM(int(trial.suggest_int('lstm_units', 50, 100)), 
+    model.add(Bidirectional(LSTM(int(trial.suggest_int('lstm_units', 50, 200)), 
                                   return_sequences=True, 
                                   input_shape=(window_size, 1), 
-                                  activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish']), 
+                                  activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh']), 
                                   dropout=trial.suggest_float('dropout_rate', 0.1, 0.5), 
-                                  recurrent_dropout=0.3)))
+                                  recurrent_dropout=trial.suggest_categorical('recurrent_dropout', [0.2, 0.3, 0.4]))))
     model.add(BatchNormalization())
     model.add(Dropout(trial.suggest_float('dropout_rate', 0.1, 0.5)))
-    model.add(Bidirectional(GRU(int(trial.suggest_int('gru_units', 50, 100)), 
+    model.add(Bidirectional(GRU(int(trial.suggest_int('gru_units', 50, 200)), 
                                   return_sequences=True, 
-                                  activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish']), 
+                                  activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh']), 
                                   dropout=trial.suggest_float('dropout_rate', 0.1, 0.5), 
-                                  recurrent_dropout=0.3)))
+                                  recurrent_dropout=trial.suggest_categorical('recurrent_dropout', [0.2, 0.3, 0.4]))))
     model.add(Dropout(trial.suggest_float('dropout_rate', 0.1, 0.5)))
-    model.add(Dense(1, kernel_regularizer=l2(0.01)))
+    model.add(Dense(1, kernel_regularizer=l2(trial.suggest_float('l2', 0.01, 0.1))))
     
-    optimizers = [Adam(), RMSprop(), SGD()]
+    optimizers = [Adam(), RMSprop(), SGD(), AdamW(), Nadam()]
     model.compile(
-        optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 2)],
-        loss=trial.suggest_categorical('loss_function', ['mean_squared_error', 'mean_absolute_error']),
-        metrics=['mean_squared_error']
+        optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 4)],
+        loss=trial.suggest_categorical('loss_function', ['mean_squared_error', 'mean_absolute_error', 'huber_loss']),
+        metrics=['mean_squared_error', 'mean_absolute_error']
     )
     
     return model
 
 def optimize_model(trial, scaled_data):
-    window_size = trial.suggest_int('window_size', 50, 150)
-    batch_size = trial.suggest_int('batch_size', 32, 64)
+    window_size = trial.suggest_int('window_size', 50, 200)
+    batch_size = trial.suggest_int('batch_size', 32, 128)
     
     X, y = [], []
     for i in range(len(scaled_data) - int(window_size)):
@@ -132,31 +133,31 @@ def optimize_model(trial, scaled_data):
     
     early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
     model_checkpoint = ModelCheckpoint('best_model.keras', monitor='val_loss', save_best_only=True)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
     
-    history = model.fit(X, y, epochs=25, batch_size=int(batch_size), 
-                        validation_split=0.2, 
-                        callbacks=[early_stopping, model_checkpoint], 
+    history = model.fit(X, y, epochs=50, batch_size=int(batch_size), 
+                        validation_split=trial.suggest_categorical('validation_split', [0.2, 0.3, 0.4]), 
+                        callbacks=[early_stopping, model_checkpoint, reduce_lr], 
                         verbose=0)
     
     mse = history.history['val_mean_squared_error'][-1]
     return mse
 
-def new_lstm(ti,data,cmp):
-    script_name= ti
+def new_lstm(ti, data, cmp):
+    script_name = ti
     study_name = script_name + '_study'
     storage = 'sqlite:///' + script_name + '_study.db'
 
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(data.values.reshape(-1, 1)) 
-    lf= select_loss_function(scaled_data)
-    sampler = TPESampler()   #RandomSampler(),GridSampler() 
-    study = optuna.create_study(directions=['minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
-    study.optimize(lambda trial: optimize_model(trial, scaled_data, lf), n_trials=100, n_jobs=8)
+    sampler = TPESampler()   
+    study = create_study(directions=['minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
+    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=100, n_jobs=8)
     best_trials = study.best_trials
     best_trial = best_trials[0]  
     print("best_trial.params:", best_trial.params) 
-    best_model = create_model(**best_trial.params, loss_function='mean_squared_error')
-    print("best_model.summary:",best_model.summary()) 
+    best_model = create_model(best_trial, int(best_trial.params['window_size']))
+    print("best_model.summary:", best_model.summary()) 
     X, y = [], []
     for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
       X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
