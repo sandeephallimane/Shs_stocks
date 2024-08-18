@@ -91,13 +91,14 @@ def stk_dt(tk):
    data = yf.download(tk, period='5y')['Close'].dropna()
    return data
 
-def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size, activation, loss_function):
+def create_model1(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size, activation, loss_function):
     model = Sequential()
     model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1), activation=activation)))
     model.add(BatchNormalization())
     model.add(Dropout(dropout_rate))
     model.add(Bidirectional(GRU(int(gru_units), return_sequences=True, activation=activation)))
-    model.add(Dense(1, kernel_regularizer=l1(0.01)))
+    model.add(Dropout(dropout_rate))
+    model.add(Dense(1, kernel_regularizer=l2(0.01)))
     model.compile(
         optimizer=['adamw', 'nadam', 'adam'][int(optimizer_idx)],
         loss=loss_function,
@@ -105,8 +106,8 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
     return model
 
 def optimize_model(trial, scaled_data, lf):
-    lstm_units = trial.suggest_int('lstm_units', 50, 150)
-    gru_units = trial.suggest_int('gru_units', 50, 150)
+    lstm_units = trial.suggest_int('lstm_units', 50, 100)
+    gru_units = trial.suggest_int('gru_units', 50, 100)
     dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
     batch_size = trial.suggest_int('batch_size', 32, 64)
     optimizer_idx = trial.suggest_int('optimizer_idx', 0, 2)
