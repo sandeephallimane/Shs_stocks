@@ -89,8 +89,7 @@ def select_loss_function(scaled_data):
         
 def stk_dt(tk):
    data = yf.download(tk, period='5y')['Close'].dropna()
-   cmp = data.iloc[-1].round(2)
-   return data,cmp
+   return data
 
 def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size, activation, loss_function):
     model = Sequential()
@@ -127,7 +126,7 @@ def optimize_model(trial, scaled_data, lf):
     X_train, X_val_test, y_train, y_val_test = train_test_split(X, y, test_size=0.2, random_state=42)
     X_val, X_test, y_val, y_test = train_test_split(X_val_test, y_val_test, test_size=0.5, random_state=42)
     model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size, activation, lf)
-    history = model.fit(X_train, y_train, epochs=25, batch_size=int(batch_size), callbacks=[early_stopping], verbose=0)
+    history = model.fit(X_train, y_train, epochs=20, batch_size=int(batch_size), validation_data=(X_val, y_val), callbacks=[early_stopping], verbose=0)
     mae = history.history['val_mean_absolute_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
     mape = history.history['val_mean_absolute_percentage_error'][-1]
@@ -180,7 +179,8 @@ b= download_file(url2, filename2)
 if a>b:
   t = ast.literal_eval(lines[b])
   print("Stock name:", t[0])
-  data,cmp = stk_dt(t[0])
+  data = stk_dt(t[0])
+  cmp = data.iloc[-1].round(2)
   t[22], t[23], t[24], t[25] = new_lstm(t[0], data,cmp)
   t[31] = 'Y'
   print("Forecasted prices:", t[22], t[23], t[24], t[25])
