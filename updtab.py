@@ -16,7 +16,8 @@ import sqlite3
 from optuna.trial import Trial
 from sklearn.preprocessing import RobustScaler
 from tensorflow.keras import regularizers
-from optuna import create_study, TPESampler
+from optuna import create_study
+from optuna.samplers import TPESampler
 from keras.regularizers import l1,l2
 from keras.layers import BatchNormalization
 from keras.activations import relu, leaky_relu, swish
