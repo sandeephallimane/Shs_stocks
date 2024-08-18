@@ -152,7 +152,7 @@ def optimize_model(trial, scaled_data):
                         validation_split=trial.suggest_categorical('validation_split', [0.2, 0.3, 0.4]), 
                         callbacks=[early_stopping, reduce_lr], 
                         verbose=0)
-    mse = history.history['val_mean_absolute_error'][-1]
+    mae = history.history['val_mean_absolute_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
     return mse,mae
 
