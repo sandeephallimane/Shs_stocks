@@ -148,6 +148,7 @@ def new_lstm(ti,data,cmp):
     study.optimize(lambda trial: optimize_model(trial, scaled_data, lf), n_trials=100, n_jobs=8)
     best_trials = study.best_trials
     best_trial = best_trials[0]  
+    print("best_trial.params:", best_trial.params) 
     best_model = create_model(**best_trial.params, loss_function=lf)
     print("best_model.summary:",best_model.summary()) 
     X, y = [], []
