@@ -15,7 +15,7 @@ import sqlite3
 from sklearn.preprocessing import RobustScaler
 from tensorflow.keras import regularizers
 from optuna.samplers import TPESampler, RandomSampler, GridSampler
-from keras.regularizers import l1
+from keras.regularizers import l1,l2
 from keras.layers import BatchNormalization
 from keras.activations import relu, leaky_relu, swish
 from sklearn.linear_model import LinearRegression
