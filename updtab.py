@@ -12,6 +12,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 import optuna
 import sqlite3
+from sklearn.preprocessing import RobustScaler
 from tensorflow.keras import regularizers
 from optuna.samplers import TPESampler, RandomSampler, GridSampler
 from keras.regularizers import l1
@@ -88,10 +89,8 @@ def select_loss_function(scaled_data):
         
 def stk_dt(tk):
    data = yf.download(tk, period='5y')['Close'].dropna()
-   scaler = MinMaxScaler(feature_range=(0, 1))
-   scaled_data = scaler.fit_transform(data.values.reshape(-1, 1)) 
    cmp = data.iloc[-1].round(2)
-   return scaled_data,cmp
+   return data,cmp
 
 def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size, activation, loss_function):
     model = Sequential()
@@ -136,12 +135,13 @@ def optimize_model(trial, scaled_data, lf):
     msle = history.history['val_mean_squared_logarithmic_error'][-1]
     return mae, mse, rmse, msle, mape
 
-def new_lstm(ti, scaled_data,cmp):
+def new_lstm(ti,data,cmp):
     script_name= ti
     study_name = script_name + '_study'
     storage = 'sqlite:///' + script_name + '_study.db'
 
     scaler = MinMaxScaler(feature_range=(0, 1))
+    scaled_data = scaler.fit_transform(data.values.reshape(-1, 1)) 
     lf= select_loss_function(scaled_data)
     sampler = TPESampler()   #RandomSampler(),GridSampler() 
     study = optuna.create_study(directions=['minimize', 'minimize','minimize','minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
@@ -179,8 +179,8 @@ b= download_file(url2, filename2)
 if a>b:
   t = ast.literal_eval(lines[b])
   print("Stock name:", t[0])
-  scaled_data,cmp = stk_dt(t[0])
-  t[22], t[23], t[24], t[25] = new_lstm(t[0], scaled_data,cmp)
+  data,cmp = stk_dt(t[0])
+  t[22], t[23], t[24], t[25] = new_lstm(t[0], data,cmp)
   t[31] = 'Y'
   print("Forecasted prices:", t[22], t[23], t[24], t[25])
   with open('upddata.txt', 'a') as f:
