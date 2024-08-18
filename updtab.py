@@ -101,12 +101,12 @@ def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size,
     model.compile(
         optimizer=['adamw', 'nadam', 'adam'][int(optimizer_idx)],
         loss=loss_function,
-        metrics='mean_squared_error'
+        metrics='mean_squared_error')
     return model
 
 def optimize_model(trial, scaled_data, lf):
-    lstm_units = trial.suggest_int('lstm_units', 50, 100)
-    gru_units = trial.suggest_int('gru_units', 50, 100)
+    lstm_units = trial.suggest_int('lstm_units', 50, 150)
+    gru_units = trial.suggest_int('gru_units', 50, 150)
     dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
     batch_size = trial.suggest_int('batch_size', 32, 64)
     optimizer_idx = trial.suggest_int('optimizer_idx', 0, 2)
@@ -119,10 +119,8 @@ def optimize_model(trial, scaled_data, lf):
         X.append(scaled_data[i:i + int(window_size)])
         y.append(scaled_data[i + int(window_size)])
     X, y = np.array(X), np.array(y)
-    X_train, X_val_test, y_train, y_val_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    X_val, X_test, y_val, y_test = train_test_split(X_val_test, y_val_test, test_size=0.5, random_state=42)
     model = create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size, activation, lf)
-    history = model.fit(X_train, y_train, epochs=20, batch_size=int(batch_size), validation_data=(X_val, y_val), callbacks=[early_stopping], verbose=0)
+    history = model.fit(X, y, epochs=25, batch_size=int(batch_size),validation_split = 0.2, callbacks=[early_stopping], verbose=0)
     mse = history.history['val_mean_squared_error'][-1]
     return mse
 
@@ -147,7 +145,7 @@ def new_lstm(ti,data,cmp):
       X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
       y.append(scaled_data[i + int(best_trial.params['window_size'])])
     X, y = np.array(X), np.array(y)
-    history = best_model.fit(X, y, epochs=10, batch_size=int(best_trial.params['batch_size']),validation_split = 0.2, callbacks=[early_stopping], verbose=0)
+    best_model.fit(X, y, epochs=100, batch_size=int(best_trial.params['batch_size']), callbacks=[early_stopping], verbose=0)
     forecast_period = 126
     forecasted_prices = []
     window_size = int(best_trial.params['window_size'])
