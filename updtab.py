@@ -114,14 +114,14 @@ def create_model(trial, window_size, loss_functions):
                                   input_shape=(window_size, 1), 
                                   activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh']), 
                                   dropout=trial.suggest_float('dropout_rate', 0.1, 0.5), 
-                                  recurrent_dropout=trial.suggest_categorical('recurrent_dropout', [0.2, 0.3, 0.4]))))
+                                  recurrent_dropout=trial.suggest_float('recurrent_dropout',0.1, 0.3))))
     model.add(BatchNormalization())
     model.add(Dropout(trial.suggest_float('dropout_rate', 0.1, 0.5)))
     model.add(Bidirectional(GRU(int(trial.suggest_int('gru_units', 50, 200)), 
                                   return_sequences=True, 
                                   activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh']), 
                                   dropout=trial.suggest_float('dropout_rate', 0.1, 0.5), 
-                                  recurrent_dropout=trial.suggest_categorical('recurrent_dropout', [0.2, 0.3, 0.4]))))
+                                  recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.9*dropout))))
     model.add(Dropout(trial.suggest_float('dropout_rate', 0.1, 0.5)))
     model.add(Dense(1, kernel_regularizer=l2(trial.suggest_float('l2', 0.01, 0.1))))
     optimizers = [Adam(), RMSprop(), SGD(), AdamW(), Nadam()]
@@ -148,13 +148,13 @@ def optimize_model(trial, scaled_data):
     early_stopping = EarlyStopping(monitor='val_loss', patience=10)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
     
-    history = model.fit(X, y, epochs=50, batch_size=int(batch_size), 
+    history = model.fit(X, y, epochs=25, batch_size=int(batch_size), 
                         validation_split=trial.suggest_categorical('validation_split', [0.2, 0.3, 0.4]), 
                         callbacks=[early_stopping, reduce_lr], 
                         verbose=0)
-    
+    mse = history.history['val_mean_absolute_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
-    return mse
+    return mse,mae
 
 def new_lstm(ti, data, cmp):
     script_name = ti
@@ -164,7 +164,7 @@ def new_lstm(ti, data, cmp):
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(data.values.reshape(-1, 1)) 
     sampler = TPESampler()   
-    study = create_study(directions=['minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
+    study = create_study(directions=['minimize']*2, study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
     study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=100, n_jobs=8)
     best_trials = study.best_trials
     best_trial = best_trials[0]  
