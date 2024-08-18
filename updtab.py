@@ -62,8 +62,7 @@ def download_file(url, filename):
 url2 = "https://raw.githubusercontent.com/sandeephallimane/Shs_stocks/main/upddata.txt"
 filename2 = "upddata.txt"
 
-
-early_stopping = EarlyStopping(monitor='loss', patience=5 )
+early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
 def select_loss_function(scaled_data):
     mean = np.mean(scaled_data)
@@ -91,18 +90,24 @@ def stk_dt(tk):
    data = yf.download(tk, period='5y')['Close'].dropna()
    return data
 
-def create_model1(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size, activation, loss_function):
+def create_model(lstm_units, gru_units, dropout_rate, optimizer_idx, batch_size, window_size, activation, loss_function):
     model = Sequential()
-    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1), activation=activation)))
+    model.add(Bidirectional(LSTM(int(lstm_units), return_sequences=True, input_shape=(window_size, 1), activation=activation, dropout=0.3, recurrent_dropout=0.3)))
     model.add(BatchNormalization())
     model.add(Dropout(dropout_rate))
-    model.add(Bidirectional(GRU(int(gru_units), return_sequences=True, activation=activation)))
+    model.add(Bidirectional(GRU(int(gru_units), return_sequences=True, activation=activation, dropout=0.3, recurrent_dropout=0.3)))
     model.add(Dropout(dropout_rate))
     model.add(Dense(1, kernel_regularizer=l2(0.01)))
+    
+    optimizers = [Adam(), RMSprop(), SGD()]
     model.compile(
-        optimizer=['adamw', 'nadam', 'adam'][int(optimizer_idx)],
+        optimizer=optimizers[int(optimizer_idx)],
         loss=loss_function,
-        metrics=['mean_squared_error'])
+        metrics=['mean_squared_error']
+    )
+    
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    model_checkpoint = ModelCheckpoint('best_model.h5', monitor='val_loss', save_best_only=True)
     return model
 
 def optimize_model(trial, scaled_data, lf):
