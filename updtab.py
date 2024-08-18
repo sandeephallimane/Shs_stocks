@@ -127,7 +127,7 @@ def create_model(trial, window_size, loss_functions):
     optimizers = [Adam(), RMSprop(), SGD(), AdamW(), Nadam()]
     model.compile(
         optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 4)],
-        loss='mean_squared_error',
+        loss=loss,
         metrics=['mean_squared_error', 'mean_absolute_error']
     )
     
@@ -145,7 +145,7 @@ def optimize_model(trial, scaled_data):
     
     model = create_model(trial, window_size, loss_functions)
     
-    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
     
     history = model.fit(X, y, epochs=50, batch_size=int(batch_size), 
