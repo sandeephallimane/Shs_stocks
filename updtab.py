@@ -145,7 +145,7 @@ def create_model1(trial, window_size, loss_functions):
                                   return_sequences=True, 
                                   activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh']), 
                                   dropout=trial.suggest_float('dropout_rate', 0.1, 0.5), 
-                                  recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.2))))
+                                  recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.3))))
     model.add(Dropout(trial.suggest_float('dropout_rate', 0.1, 0.5)))
     model.add(Dense(1, kernel_regularizer=l2(trial.suggest_float('l2', 0.01, 0.1))))
     optimizers = [Adam(), RMSprop(), SGD(), AdamW(), Nadam()]
@@ -168,11 +168,10 @@ def optimize_model(trial, scaled_data):
     X, y = np.array(X), np.array(y)
     
     model = create_model(trial, window_size, loss_functions)
-    
-    early_stopping = EarlyStopping(monitor='val_loss', patience=10)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
     
-    history = model.fit(X, y, epochs=25, batch_size=int(batch_size), 
+    history = model.fit(X, y, epochs=21, batch_size=int(batch_size), 
                         validation_split=trial.suggest_categorical('validation_split', [0.2, 0.3, 0.4]), 
                         callbacks=[early_stopping, reduce_lr], 
                         verbose=0)
@@ -210,7 +209,7 @@ def new_lstm(ti, data, cmp):
     for _ in range(forecast_period):
       current_data_reshaped = current_data.reshape(1, window_size, 1)
       prediction = best_model.predict(current_data_reshaped)
-      forecasted_price = prediction[0,-1]
+      forecasted_price =  prediction[0, -1, 0]
       forecasted_prices.append(forecasted_price)
       current_data = np.append(current_data[1:], forecasted_price)
     forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
