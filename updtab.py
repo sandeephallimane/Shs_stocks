@@ -110,7 +110,7 @@ def create_model(trial, window_size, loss_functions):
     print(loss)
     model = Sequential()
     model.add(Bidirectional(LSTM(int(trial.suggest_int('lstm_units', 50, 200)), 
-                                  return_sequences=True, 
+                                  return_sequences=False, 
                                   input_shape=(window_size, 1), 
                                   activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh']), 
                                   dropout=trial.suggest_float('dropout_rate', 0.1, 0.5), 
@@ -118,7 +118,7 @@ def create_model(trial, window_size, loss_functions):
     model.add(BatchNormalization())
     model.add(Dropout(trial.suggest_float('dropout_rate', 0.1, 0.5)))
     model.add(Bidirectional(GRU(int(trial.suggest_int('gru_units', 50, 200)), 
-                                  return_sequences=True, 
+                                  return_sequences=False, 
                                   activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh']), 
                                   dropout=trial.suggest_float('dropout_rate', 0.1, 0.5), 
                                   recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.2))))
