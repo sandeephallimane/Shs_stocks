@@ -186,7 +186,7 @@ def new_lstm(ti, data, cmp):
     for _ in range(forecast_period):
       current_data_reshaped = current_data.reshape(1, window_size, 1)
       prediction = best_model.predict(current_data_reshaped)
-      forecasted_price = prediction[0, 0]  
+      forecasted_price = prediction 
       forecasted_prices.append(forecasted_price)
       current_data = np.append(current_data[1:], forecasted_price)
     forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
