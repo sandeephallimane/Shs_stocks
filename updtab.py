@@ -134,7 +134,7 @@ def create_model1(trial, window_size, loss_functions):
     print(loss)
     model = Sequential()
     model.add(Bidirectional(LSTM(int(trial.suggest_int('lstm_units', 50, 200)), 
-                                  return_sequences=False, 
+                                  return_sequences=True, 
                                   input_shape=(window_size, 1), 
                                   activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh']), 
                                   dropout=trial.suggest_float('dropout_rate', 0.1, 0.5), 
@@ -142,7 +142,7 @@ def create_model1(trial, window_size, loss_functions):
     model.add(BatchNormalization())
     model.add(Dropout(trial.suggest_float('dropout_rate', 0.1, 0.5)))
     model.add(Bidirectional(GRU(int(trial.suggest_int('gru_units', 50, 200)), 
-                                  return_sequences=False, 
+                                  return_sequences=True, 
                                   activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh']), 
                                   dropout=trial.suggest_float('dropout_rate', 0.1, 0.5), 
                                   recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.2))))
@@ -210,7 +210,7 @@ def new_lstm(ti, data, cmp):
     for _ in range(forecast_period):
       current_data_reshaped = current_data.reshape(1, window_size, 1)
       prediction = best_model.predict(current_data_reshaped)
-      forecasted_price = prediction 
+      forecasted_price = prediction[0,-1]
       forecasted_prices.append(forecasted_price)
       current_data = np.append(current_data[1:], forecasted_price)
     forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
