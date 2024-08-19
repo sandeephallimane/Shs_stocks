@@ -127,9 +127,8 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     X, y = np.array(X), np.array(y)
     
     n_samples = len(X)
-    n_splits = determine_n_splits(n_samples)
     
-    kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+    kf = KFold(n_splits=5, shuffle=True, random_state=42)
     
     mse_scores = []
     mae_scores = []
