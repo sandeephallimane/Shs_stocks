@@ -12,6 +12,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLRO
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.optimizers import Adam, RMSprop, SGD, AdamW, Nadam
 import optuna
+from sklearn.model_selection import KFold
 import sqlite3
 from optuna.trial import Trial
 from sklearn.preprocessing import RobustScaler
@@ -83,9 +84,9 @@ loss_functions_dict = {
 def create_model(trial, window_size, loss_functions):
     loss_name = trial.suggest_categorical('loss_function', loss_categories)
     loss = loss_functions_dict[loss_name]
-    recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.2)
-    dropout=trial.suggest_float('dropout_rate', 0.1, 0.4)
-    gru_unit=int(trial.suggest_int('gru_units', 50, 100))
+    recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.3)
+    dropout=trial.suggest_float('dropout_rate', 0.1, 0.5)
+    gru_unit=int(trial.suggest_int('gru_units', 50, 150))
     model = Sequential()
   
     # Input shape is (window_size, 1)
@@ -112,34 +113,53 @@ def create_model(trial, window_size, loss_functions):
     
     return model
 
-early_stopping = EarlyStopping(monitor='val_loss', patience=10)
+early_stopping = EarlyStopping(monitor='loss', patience=10)
 
-def optimize_model(trial, scaled_data):
+def optimize_model(trial: Trial, scaled_data: np.ndarray):
     window_size = trial.suggest_int('window_size', 50, 150)
     batch_size = trial.suggest_int('batch_size', 32, 64)
     
+    # Prepare data
     X, y = [], []
     for i in range(len(scaled_data) - window_size):
         X.append(scaled_data[i:i + window_size])
         y.append(scaled_data[i + window_size])
-    
     X, y = np.array(X), np.array(y)
-
-    model = create_model(trial, window_size, loss_functions)
     
-    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
+    n_samples = len(X)
+    n_splits = determine_n_splits(n_samples)
     
-    history = model.fit(
-        X, y, epochs=30, batch_size=int(batch_size), 
-        validation_split=trial.suggest_categorical('validation_split', [0.2, 0.3]), 
-        callbacks=[early_stopping, reduce_lr], 
-        verbose=0
-    )
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
     
-    mae = history.history['val_mean_absolute_error'][-1]
-    mse = history.history['val_mean_squared_error'][-1]
-    return mse, mae
+    mse_scores = []
+    mae_scores = []
+    
+    for train_index, val_index in kf.split(X):
+        X_train, X_val = X[train_index], X[val_index]
+        y_train, y_val = y[train_index], y[val_index]
+        
+        model = create_model(trial, window_size)
+        
+        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
+        
+        history = model.fit(
+            X_train, y_train, epochs=30, batch_size=int(batch_size),
+            validation_data=(X_val, y_val),
+            callbacks=[early_stopping, reduce_lr],
+            verbose=0
+        )
+        
+        mse = history.history['val_mean_squared_error'][-1]
+        mae = history.history['val_mean_absolute_error'][-1]
+        
+        mse_scores.append(mse)
+        mae_scores.append(mae)
+    
+    mean_mse = np.mean(mse_scores)
+    mean_mae = np.mean(mae_scores)
+    
+    return mean_mse, mean_mae
 
 def new_lstm(ti, data, cmp):
     script_name = ti
@@ -171,13 +191,16 @@ def new_lstm(ti, data, cmp):
     forecasted_prices = []
     window_size = int(best_trial.params['window_size'])
     current_data = scaled_data[-window_size:]
-    
+    ty=1
     for _ in range(forecast_period):
-        current_data_reshaped = current_data.reshape(1, window_size, 1)  # Reshape for prediction
+        current_data_reshaped = current_data.reshape(1, window_size, 1) 
         prediction = best_model.predict(current_data_reshaped)
+        print("Day:",ty)
+        print("Prediction:",prediction)
         forecasted_price = prediction[0]  
         forecasted_prices.append(forecasted_price)
         current_data = np.append(current_data[1:], forecasted_price)
+        ty=ty+1
     
     forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
     min_p = np.min(forecasted_prices).round(2)
