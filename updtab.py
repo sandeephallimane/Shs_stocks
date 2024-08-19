@@ -93,7 +93,7 @@ def stk_dt(tk):
    data = yf.download(tk, period='5y')['Close'].dropna()
    return data
 
-
+loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanAbsoluteError(), tf.keras.losses.Huber(),tf.keras.losses.MeanSquaredLogarithmicError()]
 loss_categories = ['mse', 'mae', 'huber','msle']
 loss_functions_dict = {
         'mse': tf.keras.losses.MeanSquaredError(),
