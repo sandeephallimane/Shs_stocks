@@ -101,7 +101,7 @@ loss_functions_dict = {
         'huber': tf.keras.losses.Huber(),
         'msle' : tf.keras.losses.MeanSquaredLogarithmicError()
     }
-def create_model(trial, window_size, loss_functions):
+def create_model1(trial, window_size, loss_functions):
     loss_name = trial.suggest_categorical('loss_function', loss_categories)
     loss = loss_functions_dict[loss_name]
     lstm_units = trial.suggest_int('lstm_units', 50, 150)
@@ -128,7 +128,7 @@ def create_model(trial, window_size, loss_functions):
     model.add(Dense(1, kernel_regularizer=l2(l2_value)))
     model.compile(optimizer=optimizer,loss=loss, metrics=['mean_squared_error', 'mean_absolute_error'])
     return model
-def create_model1(trial, window_size, loss_functions):
+def create_model(trial, window_size, loss_functions):
     loss_name = trial.suggest_categorical('loss_function', loss_categories)
     loss = loss_functions_dict[loss_name]
     print(loss)
