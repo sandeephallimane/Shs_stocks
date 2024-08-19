@@ -93,18 +93,42 @@ def stk_dt(tk):
    data = yf.download(tk, period='5y')['Close'].dropna()
    return data
 
-mean_squared_error = MeanSquaredError()
-mean_absolute_error = MeanAbsoluteError()
-huber_loss = Huber()
-loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanAbsoluteError(), tf.keras.losses.Huber()]
-loss_function_categories = list(range(len(loss_functions)))
-loss_categories = ['mse', 'mae', 'huber']
+
+loss_categories = ['mse', 'mae', 'huber','msle']
 loss_functions_dict = {
         'mse': tf.keras.losses.MeanSquaredError(),
         'mae': tf.keras.losses.MeanAbsoluteError(),
-        'huber': tf.keras.losses.Huber()
+        'huber': tf.keras.losses.Huber(),
+        'msle' : tf.keras.losses.MeanSquaredLogarithmicError()
     }
 def create_model(trial, window_size, loss_functions):
+    loss_name = trial.suggest_categorical('loss_function', loss_categories)
+    loss = loss_functions_dict[loss_name]
+    lstm_units = trial.suggest_int('lstm_units', 50, 150)
+    dropout_rate = trial.suggest_float('dropout_rate', 0.1, 0.5)
+    recurrent_dropout = trial.suggest_float('recurrent_dropout', 0.1, 0.3)
+    l2_value = trial.suggest_float('l2', 0.01, 0.1)
+    optimizers = [Adam(), RMSprop(), SGD(), AdamW(), Nadam()]
+    optimizer = optimizers[trial.suggest_int('optimizer_idx', 0, 4)]
+    gru_units = trial.suggest_int('gru_units', 50, 150)
+    activation = trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh'])
+    if activation == 'leaky_relu':
+        activation_function = LeakyReLU(alpha=0.01)
+    elif activation == 'swish':
+        activation_function = tf.keras.activations.swish
+    else:
+        activation_function = activation
+    
+    model = Sequential()
+    model.add(Bidirectional(LSTM(lstm_units,return_sequences=False,input_shape=(window_size, 1),activation=activation_function,dropout=dropout_rate,recurrent_dropout=recurrent_dropout)))
+    model.add(BatchNormalization())
+    model.add(Dropout(dropout_rate))    
+    model.add(Bidirectional(GRU(gru_units,return_sequences=False,activation=activation_function,dropout=dropout_rate,recurrent_dropout=recurrent_dropout)))
+    model.add(Dropout(dropout_rate))
+    model.add(Dense(1, kernel_regularizer=l2(l2_value)))
+    model.compile(optimizer=optimizer,loss=loss, metrics=['mean_squared_error', 'mean_absolute_error'])
+    return model
+def create_model1(trial, window_size, loss_functions):
     loss_name = trial.suggest_categorical('loss_function', loss_categories)
     loss = loss_functions_dict[loss_name]
     print(loss)
