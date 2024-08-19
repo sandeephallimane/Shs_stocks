@@ -12,7 +12,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLRO
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.optimizers import Adam, RMSprop, SGD, AdamW, Nadam
 import optuna
-from sklearn.model_selection import KFold
+from sklearn.model_selection import TimeSeriesSplit
 import sqlite3
 from optuna.trial import Trial
 from sklearn.preprocessing import RobustScaler
@@ -127,13 +127,15 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     X, y = np.array(X), np.array(y)
     
     n_samples = len(X)
+    n_splits = 5
     
-    kf = KFold(n_splits=5, shuffle=True, random_state=42)
+    # Use TimeSeriesSplit for sequential data
+    tscv = TimeSeriesSplit(n_splits=n_splits)
     
     mse_scores = []
     mae_scores = []
     
-    for train_index, val_index in kf.split(X):
+    for train_index, val_index in tscv.split(X):
         X_train, X_val = X[train_index], X[val_index]
         y_train, y_val = y[train_index], y[val_index]
         
