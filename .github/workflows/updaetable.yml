@@ -34,25 +34,26 @@ jobs:
           echo "::set-output name=a::$a"
           echo "::set-output name=b::$b"
 
-      - name: Configure Git
-        run: |
-          git config --global user.name "sandeephallimane"
-          git config --global user.email "hssandp@gmail.com"
-          
-      - name: Pull latest changes
-        run: git pull --rebase origin main
-
+      
       - name: Rename newdata.txt to upddata.txt
         run: |
           mv newdata.txt upddata.txt
 
-      - name: Add and commit upddata.txt
+      - name: Configure Git
         run: |
-          git add upddata.txt
-          git commit -m "Add upddata.txt" || echo "Nothing to commit"
+          git config --global user.name "sandeephallimane"
+          git config --global user.email "hssandp@gmail.com"
+
+      - name: Pull latest changes
+        run: git pull --rebase origin main
+
+      - name: Commit PDF file
+        run: |
+          git add stocks.txt
+          git commit -m "Add stocks.txt" || echo "Nothing to commit"
 
       - name: Push changes
-        uses: ad-m/github-push-action@v0.6.0
+        uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.MY_REPO_TOKEN }}
 
