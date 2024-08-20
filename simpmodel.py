@@ -139,7 +139,7 @@ def new_lstm(ti, data, cmp):
     best_trials = study.best_trials
     best_trial = best_trials[0]  
     print("best_trial.params:", best_trial.params) 
-    best_model = create_model(best_trial, int(best_trial.params['window_size']), loss_functions)
+    best_model = create_model(best_trial, int(best_trial.params['window_size']))
     
     X, y = [], []
     for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
