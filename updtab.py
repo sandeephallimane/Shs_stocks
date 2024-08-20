@@ -101,7 +101,7 @@ def create_model(trial, window_size, loss_functions):
     model.compile(
         optimizer=Adam(),
         loss=loss,
-        metrics=['mean_squared_error', 'mean_absolute_error']
+        metrics=['mean_squared_error', 'mean_absolute_error','mean_absolute_percentage_error']
     )
     
     return model
@@ -126,7 +126,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     
     mse_scores = []
     mae_scores = []
-    
+    mape_scores =[]
     for train_index, val_index in tscv.split(X):
         X_train, X_val = X[train_index], X[val_index]
         y_train, y_val = y[train_index], y[val_index]
@@ -137,7 +137,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
         reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
         
         history = model.fit(
-            X_train, y_train, epochs=25, batch_size=int(batch_size),
+            X_train, y_train, epochs=30, batch_size=int(batch_size),
             validation_data=(X_val, y_val),
             callbacks=[early_stopping, reduce_lr],
             verbose=0
@@ -145,14 +145,16 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
         
         mse = history.history['val_mean_squared_error'][-1]
         mae = history.history['val_mean_absolute_error'][-1]
+        mape = history.history['val_mean_absolute_percentage_error'][-1]
         
         mse_scores.append(mse)
         mae_scores.append(mae)
+        mape_scores.append(mape)
     
     mean_mse = np.mean(mse_scores)
     mean_mae = np.mean(mae_scores)
-    
-    return mean_mse, mean_mae
+    mean_mape = np.mean(mape_scores)
+    return mean_mse, mean_mae, mean_mape
 
 def new_lstm(ti, data, cmp):
     script_name = ti
@@ -162,7 +164,7 @@ def new_lstm(ti, data, cmp):
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(data.values.reshape(-1, 1)) 
     sampler = TPESampler()   
-    study = create_study(directions=['minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
+    study = create_study(directions=['minimize', 'minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
     study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=100, n_jobs=8)
     
     best_trials = study.best_trials
