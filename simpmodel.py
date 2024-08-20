@@ -84,8 +84,8 @@ loss_functions_dict = {
 def create_model(trial, window_size,loss_functions):
     loss_name = trial.suggest_categorical('loss_function', loss_categories)
     loss = loss_functions_dict[loss_name]
-    recurrent_dropout=0.15
-    dropout=trial.suggest_float('dropout_rate', 0.2, 0.4)
+    recurrent_dropout=0.2
+    dropout=trial.suggest_float('dropout_rate', 0.2, 0.5)
     gru_unit=trial.suggest_int('gru_units', 50, 100)
     model = Sequential()
     model.add(LSTM(
@@ -98,7 +98,7 @@ def create_model(trial, window_size,loss_functions):
     
     model.add(BatchNormalization())
     model.add(Dropout(dropout))
-    model.add(Dense(1, kernel_regularizer=l2(0.1)))
+    model.add(Dense(1, kernel_regularizer=l2(0.2)))
     
     optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]    
     model.compile(
@@ -112,7 +112,7 @@ def create_model(trial, window_size,loss_functions):
 early_stopping = EarlyStopping(monitor='loss', patience=10)
 
 def create_best_model(dropout,gru_unit, optimizer, window_size,loss):
-    recurrent_dropout=0.15
+    recurrent_dropout=0.2
     model = Sequential()
     model.add(LSTM(
         gru_unit,
@@ -143,14 +143,18 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
         X.append(scaled_data[i:i + window_size])
         y.append(scaled_data[i + window_size])
     X, y = np.array(X), np.array(y)    
-    model = create_model(trial, window_size,loss_functions)
-    early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patience=10, restore_best_weights=True)
+    model = create_model(trial, window_size, loss_functions)
+    
+    early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patience=15, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
-    history = model.fit(X, y, epochs=50, batch_size=int(batch_size),validation_split=0.2,callbacks=[early_stopping, reduce_lr],verbose=0)
+    
+    history = model.fit(X, y, epochs=60, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping, reduce_lr], verbose=0)
+    
     mape = history.history['val_mean_absolute_percentage_error'][-1]
-    mse = history.history['val_mean_squared_error'][-1] 
-    return mape,mse
-
+    mse = history.history['val_mean_squared_error'][-1]
+    trial.user_attrs['model'] = model
+    
+    return mape, mse
 def new_lstm(ti, data, cmp):
     script_name = ti
     study_name = script_name + '21_study'
@@ -165,17 +169,7 @@ def new_lstm(ti, data, cmp):
     best_trials = study.best_trials
     best_trial = best_trials[0]  
     print("best_trial.params:", best_trial.params) 
-    best_model = create_best_model(int(best_trial.params['dropout_rate']),int(best_trial.params['gru_units']), int(best_trial.params['optimizer_idx']),int(best_trial.params['window_size']),best_trial.params['loss_function'])
-    
-    X, y = [], []
-    for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
-        X.append(scaled_data[i:i + int(best_trial.params['window_size'])])
-        y.append(scaled_data[i + int(best_trial.params['window_size'])])
-    
-    X, y = np.array(X), np.array(y)
-    early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patience=10, restore_best_weights=True)
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
-    best_model.fit(X, y, epochs=100, batch_size=32,callbacks=[early_stopping, reduce_lr],verbose=1)
+    best_model = best_trial.user_attrs['model']
     
     forecast_period = 124
     forecasted_prices = []
