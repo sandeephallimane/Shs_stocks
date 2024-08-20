@@ -185,10 +185,17 @@ def new_lstm(ti, data, cmp):
         y.append(scaled_data[i + int(best_trial.params['window_size'])])
     
     X, y = np.array(X), np.array(y)
+    n_splits = 5
+    tscv = TimeSeriesSplit(n_splits=n_splits)
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
     
-    best_model.fit(X, y, epochs=100, batch_size=int(best_trial.params['batch_size']), callbacks=[early_stopping], verbose=0)
+    for train_index, val_index in tscv.split(X):
+        X_train, X_val = X[train_index], X[val_index]
+        y_train, y_val = y[train_index], y[val_index]
+    best_model.fit(X, y, epochs=100, batch_size=int(best_trial.params['batch_size']),validation_data=(X_val, y_val), callbacks=[early_stopping, reduce_lr],verbose=1)
     
-    forecast_period = 126
+    forecast_period = 124
     forecasted_prices = []
     window_size = int(best_trial.params['window_size'])
     current_data = scaled_data[-window_size:]
