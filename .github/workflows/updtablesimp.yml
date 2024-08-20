@@ -1,0 +1,35 @@
+name: update table2 simple
+on:
+  workflow_dispatch:
+
+jobs:
+  upload-plot:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            gpu: true
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'  
+      
+      - name: Execute Python dependency
+        run: |
+         python -m pip uninstall -r requirements2.txt &&
+         python -m pip cache purge &&
+         python -m pip install --upgrade pip setuptools &&
+         python -m pip install -r requirements2.txt 
+    
+      - name: Generate PDF
+        run: 
+          python simpmodel.py
+          echo "::set-output name=a::$a"
+          echo "::set-output name=b::$b"
