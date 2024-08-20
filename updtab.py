@@ -83,8 +83,8 @@ def create_model(trial, window_size, loss_functions):
     loss_name = trial.suggest_categorical('loss_function', loss_categories)
     loss = loss_functions_dict[loss_name]
     recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.3)
-    dropout=trial.suggest_float('dropout_rate', 0.1, 0.4)
-    gru_unit=int(trial.suggest_int('gru_units', 50, 100))
+    dropout=trial.suggest_float('dropout_rate', 0.2, 0.4)
+    gru_unit=50
     model = Sequential()
   
     # Input shape is (window_size, 1)
