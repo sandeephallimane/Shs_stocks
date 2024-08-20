@@ -114,7 +114,7 @@ def create_model(trial, window_size, loss_functions):
 early_stopping = EarlyStopping(monitor='loss', patience=10)
 
 def optimize_model(trial: Trial, scaled_data: np.ndarray):
-    window_size = trial.suggest_int('window_size', 50, 80)
+    window_size = trial.suggest_int('window_size', 60, 120)
     batch_size = trial.suggest_int('batch_size', 32, 64)
     
     X, y = [], []
