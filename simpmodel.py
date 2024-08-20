@@ -70,7 +70,9 @@ early_stopping = EarlyStopping(monitor='val_loss', patience=10)
         
 def stk_dt(tk):
    data = yf.download(tk, period='5y')['Close'].dropna()
-   return data
+   z_score = (data - data.mean()) / data.std()
+   data_without_outliers = data[(z_score < 2) & (z_score > -2)]
+   return data_without_outliers
 
 loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanAbsoluteError()]
 loss_categories = ['mse', 'mae']
@@ -79,8 +81,9 @@ loss_functions_dict = {
         'mae': tf.keras.losses.MeanAbsoluteError()
     }
 
-def create_model(trial, window_size):
-    loss =  tf.keras.losses.MeanSquaredError()
+def create_model(trial, window_size,loss_functions):
+    loss_name = trial.suggest_categorical('loss_function', loss_categories)
+    loss = loss_functions_dict[loss_name]
     recurrent_dropout=0.15
     dropout=trial.suggest_float('dropout_rate', 0.2, 0.4)
     gru_unit=trial.suggest_int('gru_units', 50, 100)
@@ -95,7 +98,7 @@ def create_model(trial, window_size):
     
     model.add(BatchNormalization())
     model.add(Dropout(dropout))
-    model.add(Dense(1, kernel_regularizer=l2(0.05)))
+    model.add(Dense(1, kernel_regularizer=l2(0.1)))
     
     optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]    
     model.compile(
@@ -108,8 +111,7 @@ def create_model(trial, window_size):
 
 early_stopping = EarlyStopping(monitor='loss', patience=10)
 
-def create_best_model(dropout,gru_unit, optimizer, window_size):
-    loss =  tf.keras.losses.MeanSquaredError()
+def create_best_model(dropout,gru_unit, optimizer, window_size,loss):
     recurrent_dropout=0.15
     model = Sequential()
     model.add(LSTM(
@@ -163,7 +165,7 @@ def new_lstm(ti, data, cmp):
     best_trials = study.best_trials
     best_trial = best_trials[0]  
     print("best_trial.params:", best_trial.params) 
-    best_model = create_best_model(int(best_trial.params['dropout_rate']),int(best_trial.params['gru_unit']), int(best_trial.params['optimizer_idx']),int(best_trial.params['window_size']))
+    best_model = create_best_model(int(best_trial.params['dropout_rate']),int(best_trial.params['gru_units']), int(best_trial.params['optimizer_idx']),int(best_trial.params['window_size']),best_trial.params['loss_function'])
     
     X, y = [], []
     for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
