@@ -101,7 +101,7 @@ def create_model(trial, window_size, loss_functions):
     model.add(BatchNormalization())
     model.add(Dropout(dropout))
     
-    model.add(Dropout(trial.suggest_float('dropout_rate', 0.1, 0.5)))
+    model.add(Dropout(trial.suggest_float('dropout_rate', 0.2, 0.5)))
     model.add(Dense(1, kernel_regularizer=l2(trial.suggest_float('l2', 0.01, 0.1))))
     
     optimizers = [Adam(), RMSprop(), SGD(), AdamW(), Nadam()]    
@@ -116,7 +116,7 @@ def create_model(trial, window_size, loss_functions):
 early_stopping = EarlyStopping(monitor='loss', patience=10)
 
 def optimize_model(trial: Trial, scaled_data: np.ndarray):
-    window_size = trial.suggest_int('window_size', 50, 150)
+    window_size = trial.suggest_int('window_size', 20, 60)
     batch_size = trial.suggest_int('batch_size', 32, 64)
     
     X, y = [], []
