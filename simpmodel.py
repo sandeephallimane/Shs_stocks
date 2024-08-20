@@ -143,7 +143,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
         X.append(scaled_data[i:i + window_size])
         y.append(scaled_data[i + window_size])
     X, y = np.array(X), np.array(y)    
-    model = create_model(trial, window_size)
+    model = create_model(trial, window_size,loss_functions)
     early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patience=10, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
     history = model.fit(X, y, epochs=50, batch_size=int(batch_size),validation_split=0.2,callbacks=[early_stopping, reduce_lr],verbose=0)
