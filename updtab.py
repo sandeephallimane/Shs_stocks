@@ -144,7 +144,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
         reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
         
         history = model.fit(
-            X_train, y_train, epochs=50, batch_size=int(batch_size),
+            X_train, y_train, epochs=25, batch_size=int(batch_size),
             validation_data=(X_val, y_val),
             callbacks=[early_stopping, reduce_lr],
             verbose=0
