@@ -82,8 +82,8 @@ loss_functions_dict = {
 def create_model(trial, window_size):
     loss =  tf.keras.losses.MeanSquaredError()
     recurrent_dropout=0.15
-    dropout=0.25
-    gru_unit=50
+    dropout=trial.suggest_float('dropout_rate', 0.2, 0.4)
+    gru_unit=trial.suggest_int('gru_units', 50, 100)
     model = Sequential()
     model.add(LSTM(
         gru_unit,
@@ -97,9 +97,9 @@ def create_model(trial, window_size):
     model.add(Dropout(dropout))
     model.add(Dense(1, kernel_regularizer=l2(0.05)))
     
-    optimizers = [Adam(), RMSprop(), SGD(), AdamW(), Nadam()]    
+    optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]    
     model.compile(
-        optimizer=AdamW(),
+        optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 3)],
         loss=loss,
         metrics=['mean_squared_error','mean_absolute_percentage_error']
     )
