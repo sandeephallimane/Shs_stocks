@@ -108,6 +108,30 @@ def create_model(trial, window_size):
 
 early_stopping = EarlyStopping(monitor='loss', patience=10)
 
+def create_best_model(dropout,gru_unit, optimizer, window_size):
+    loss =  tf.keras.losses.MeanSquaredError()
+    recurrent_dropout=0.15
+    model = Sequential()
+    model.add(LSTM(
+        gru_unit,
+        input_shape=(window_size, 1),  
+        activation='tanh',
+        dropout=dropout,
+        recurrent_dropout=recurrent_dropout
+    ))
+    
+    model.add(BatchNormalization())
+    model.add(Dropout(dropout))
+    model.add(Dense(1, kernel_regularizer=l2(0.05)))
+    
+    optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]    
+    model.compile(
+        optimizer=optimizers[optimizer],
+        loss=loss,
+        metrics=['mean_squared_error','mean_absolute_percentage_error']
+    )
+    return model
+    
 def optimize_model(trial: Trial, scaled_data: np.ndarray):
     window_size = trial.suggest_int('window_size', 60, 120)
     batch_size = 32
@@ -118,7 +142,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
         y.append(scaled_data[i + window_size])
     X, y = np.array(X), np.array(y)    
     model = create_model(trial, window_size)
-    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+    early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patience=10, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
     history = model.fit(X, y, epochs=50, batch_size=int(batch_size),validation_split=0.2,callbacks=[early_stopping, reduce_lr],verbose=0)
     mape = history.history['val_mean_absolute_percentage_error'][-1]
@@ -134,12 +158,12 @@ def new_lstm(ti, data, cmp):
     scaled_data = scaler.fit_transform(data.values.reshape(-1, 1)) 
     sampler = TPESampler()   
     study = create_study(directions=['minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
-    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=100, n_jobs=8)
+    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=200, n_jobs=8)
     
     best_trials = study.best_trials
     best_trial = best_trials[0]  
     print("best_trial.params:", best_trial.params) 
-    best_model = create_model(best_trial, int(best_trial.params['window_size']))
+    best_model = create_best_model(int(best_trial.params['dropout_rate']),int(best_trial.params['gru_unit']), int(best_trial.params['optimizer_idx']),int(best_trial.params['window_size']))
     
     X, y = [], []
     for i in range(len(scaled_data) - int(best_trial.params['window_size'])):
@@ -147,7 +171,7 @@ def new_lstm(ti, data, cmp):
         y.append(scaled_data[i + int(best_trial.params['window_size'])])
     
     X, y = np.array(X), np.array(y)
-    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+    early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patience=10, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
     best_model.fit(X, y, epochs=100, batch_size=32,callbacks=[early_stopping, reduce_lr],verbose=1)
     
