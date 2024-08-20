@@ -39,28 +39,20 @@ jobs:
           git config --global user.name "sandeephallimane"
           git config --global user.email "hssandp@gmail.com"
           
-      - name: Delete upddata.txt file if exists
-        run: |
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions"
-          if [ -f "upddata.txt" ]; then
-            git rm -f upddata.txt
-            git commit -m "Delete upddata.txt" || echo "Nothing to delete"
-            git push origin main || echo "Failed to push deletion commit"
-          else
-            echo "upddata.txt file not found. Skipping deletion."
-          fi
-          
       - name: Pull latest changes
         run: git pull --rebase origin main
 
-      - name: Commit PDF file
+      - name: Rename newdata.txt to upddata.txt
+        run: |
+          mv newdata.txt upddata.txt
+
+      - name: Add and commit upddata.txt
         run: |
           git add upddata.txt
           git commit -m "Add upddata.txt" || echo "Nothing to commit"
-          
+
       - name: Push changes
-        uses: ad-m/github-push-action@master
+        uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{ secrets.MY_REPO_TOKEN }}
 
