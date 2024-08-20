@@ -72,13 +72,11 @@ def stk_dt(tk):
    data = yf.download(tk, period='5y')['Close'].dropna()
    return data
 
-loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanAbsoluteError(), tf.keras.losses.Huber(),tf.keras.losses.MeanSquaredLogarithmicError()]
-loss_categories = ['mse', 'mae', 'huber','msle']
+loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanAbsoluteError()]
+loss_categories = ['mse', 'mae']
 loss_functions_dict = {
         'mse': tf.keras.losses.MeanSquaredError(),
-        'mae': tf.keras.losses.MeanAbsoluteError(),
-        'huber': tf.keras.losses.Huber(),
-        'msle' : tf.keras.losses.MeanSquaredLogarithmicError()
+        'mae': tf.keras.losses.MeanAbsoluteError()
     }
 
 def create_model(trial, window_size, loss_functions):
@@ -116,7 +114,7 @@ def create_model(trial, window_size, loss_functions):
 early_stopping = EarlyStopping(monitor='loss', patience=10)
 
 def optimize_model(trial: Trial, scaled_data: np.ndarray):
-    window_size = trial.suggest_int('window_size', 20, 60)
+    window_size = trial.suggest_int('window_size', 50, 80)
     batch_size = trial.suggest_int('batch_size', 32, 64)
     
     X, y = [], []
