@@ -64,7 +64,7 @@ def download_file(url, filename):
         print(f"Error downloading file: {e}")
 
 url2 = "https://raw.githubusercontent.com/sandeephallimane/Shs_stocks/main/upddata.txt"
-filename2 = "upddata.txt"
+filename2 = "newdata.txt"
 
 early_stopping = EarlyStopping(monitor='val_loss', patience=10)
         
@@ -85,8 +85,8 @@ def create_model(trial, window_size, loss_functions):
     loss_name = trial.suggest_categorical('loss_function', loss_categories)
     loss = loss_functions_dict[loss_name]
     recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.3)
-    dropout=trial.suggest_float('dropout_rate', 0.1, 0.5)
-    gru_unit=int(trial.suggest_int('gru_units', 50, 150))
+    dropout=trial.suggest_float('dropout_rate', 0.1, 0.4)
+    gru_unit=int(trial.suggest_int('gru_units', 50, 100))
     model = Sequential()
   
     # Input shape is (window_size, 1)
@@ -119,7 +119,6 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     window_size = trial.suggest_int('window_size', 50, 150)
     batch_size = trial.suggest_int('batch_size', 32, 64)
     
-    # Prepare data
     X, y = [], []
     for i in range(len(scaled_data) - window_size):
         X.append(scaled_data[i:i + window_size])
@@ -226,7 +225,7 @@ if a>b:
   t[22], t[23], t[24], t[25] = new_lstm(t[0], data,cmp)
   t[31] = 'Y'
   print("Forecasted prices:", t[22], t[23], t[24], t[25])
-  with open('upddata.txt', 'a') as f:
+  with open('newdata.txt', 'a') as f:
     f.write(str(t) + '\n')
 print(a)
 print(b)
