@@ -139,13 +139,13 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
         X_train, X_val = X[train_index], X[val_index]
         y_train, y_val = y[train_index], y[val_index]
         
-        model = create_model(trial, window_size)
+        model = create_model(trial, window_size, loss_functions)
         
         early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
         reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
         
         history = model.fit(
-            X_train, y_train, epochs=30, batch_size=int(batch_size),
+            X_train, y_train, epochs=50, batch_size=int(batch_size),
             validation_data=(X_val, y_val),
             callbacks=[early_stopping, reduce_lr],
             verbose=0
