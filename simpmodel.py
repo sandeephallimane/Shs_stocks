@@ -87,7 +87,7 @@ loss_functions_dict = {
 
 def create_model(trial, window_size,loss_functions):
     loss_name = trial.suggest_categorical('loss_function', loss_categories)
-    loss = loss_functions_dict[loss_name]
+    loss = tf.keras.losses.MeanSquaredError()
     recurrent_dropout=0.2
     dropout=trial.suggest_float('dropout_rate', 0.2, 0.5)
     gru_unit=trial.suggest_int('gru_units', 50, 100)
@@ -156,7 +156,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
             if self.restore_best_weights and self.best_weights is not None and epoch >= self.min_epochs:
                 self.model.set_weights(self.best_weights)
                 
-    early_stopping = CustomEarlyStopping(min_epochs=30, patience=3, restore_best_weights=True)
+    early_stopping = CustomEarlyStopping(min_epochs=30, patience=10, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=0.001)
     
     history = model.fit(X, y, epochs=60, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping, reduce_lr], verbose=0)
