@@ -133,7 +133,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     
     mape = history.history['val_mean_absolute_percentage_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
-    model_filename = f"best_model_trial_{trial.number}.h5"
+    model_filename = f"model_{trial.number}.keras"
     save_model(model, model_filename)
     
     return mape, mse
@@ -152,14 +152,14 @@ def new_lstm(ti, data, cmp):
         storage=storage,
         load_if_exists=True,
         sampler=sampler,
-        pruner=MedianPruner()  # Optional: use a pruner if needed
+        pruner=MedianPruner()  
     )
     study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=200, n_jobs=8)
     
     best_trials = study.best_trials
     best_trial = best_trials[0]
     print("best_trial.params:", best_trial.params) 
-    best_model_key = f'model_{best_trial.number}.h5'
+    best_model_key = f'model_{best_trial.number}.keras'
     best_model = load_model(best_model_key)
     
     forecast_period = 124
