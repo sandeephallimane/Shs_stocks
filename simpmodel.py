@@ -25,6 +25,7 @@ from keras.layers import BatchNormalization
 from keras.activations import relu, leaky_relu, swish
 from sklearn.linear_model import LinearRegression
 import os
+from tensorflow.keras.models import save_model, load_model
 from sklearn.model_selection import TimeSeriesSplit
 import requests
 import ast
@@ -112,10 +113,12 @@ def create_model(trial, window_size,loss_functions):
 
 early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patience=15,restore_best_weights=True) 
     
+
+
 def optimize_model(trial: Trial, scaled_data: np.ndarray):
     window_size = trial.suggest_int('window_size', 80, 130)
-    batch_size = trial.suggest_int('window_size', 32, 64)
-    
+    batch_size = trial.suggest_int('batch_size', 32, 64)  # Correct the parameter name
+
     X, y = [], []
     for i in range(len(scaled_data) - window_size):
         X.append(scaled_data[i:i + window_size])
@@ -130,8 +133,11 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     
     mape = history.history['val_mean_absolute_percentage_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
-    trial.user_attrs[f'model_{trial.number}'] = history 
+    model_filename = f"best_model_trial_{trial.number}.h5"
+    save_model(model, model_filename)
+    
     return mape, mse
+
 def new_lstm(ti, data, cmp):
     script_name = ti
     study_name = script_name + '21_study'
