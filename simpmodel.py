@@ -122,10 +122,11 @@ def create_model(trial, window_size, loss_functions):
     activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh'])
     kl=l2(trial.suggest_float('l2', 0.01, 0.1)
     optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]    
+    ls =int(trial.suggest_int('lstm_units', 50, 150))
     
     model = Sequential()
     model.add(LSTM(
-        int(trial.suggest_int('lstm_units', 50, 100)), 
+        ls, return_sequences=True,
         input_shape=(window_size, 1), 
         activation=activation,
         dropout=dropout,
@@ -135,9 +136,9 @@ def create_model(trial, window_size, loss_functions):
     model.add(Dropout(dropout))
     
     model.add(GRU(
-        int(trial.suggest_int('gru_units', 50, 100)),
+        ls,return_sequences=True,
         dropout=dropout,
-        recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.2)
+        recurrent_dropout=recurrent_dropout
     ))
     model.add(Dropout(dropout))
     model.add(Dense(1, kernel_regularizer=kl))) 
