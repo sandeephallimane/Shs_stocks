@@ -87,7 +87,6 @@ loss_functions_dict = {
     }
 
 def create_model(trial, window_size):
-    loss_name = trial.suggest_categorical('loss_function', loss_categories)
     loss = tf.keras.losses.MeanSquaredError()
     recurrent_dropout=0.2
     dropout=trial.suggest_float('dropout_rate', 0.2, 0.5)
