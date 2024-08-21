@@ -74,7 +74,7 @@ def stk_dt(tk):
    data_without_outliers = data[(z_score < 2) & (z_score > -2)]
    return data_without_outliers
 
-loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanSquaredError.MeanAbsolutePercentageError()]
+loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanAbsolutePercentageError()]
 loss_categories = ['mse', 'mape']
 loss_functions_dict = {
         'mse': tf.keras.losses.MeanSquaredError(),
