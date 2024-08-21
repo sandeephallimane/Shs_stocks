@@ -125,8 +125,36 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
         y.append(scaled_data[i + window_size])
     X, y = np.array(X), np.array(y)    
     model = create_model(trial, window_size, loss_functions)
-    
-    early_stopping = EarlyStopping(monitor='mean_squared_error', patience=15, restore_best_weights=True)
+    class CustomEarlyStopping(tf.keras.callbacks.Callback):
+      def __init__(self, min_epochs=30, patience=0, restore_best_weights=True):
+        super(CustomEarlyStopping, self).__init__()
+        self.min_epochs = min_epochs
+        self.patience = patience
+        self.restore_best_weights = restore_best_weights
+        self.wait = 0
+        self.best = float('inf')
+        self.best_weights = None
+        self.epochs_since_best = 0
+
+      def on_epoch_end(self, epoch, logs=None):
+        current = logs.get('val_loss')
+        if current is None:
+            raise ValueError('`val_loss` is required in logs.')
+        if epoch < self.min_epochs:
+            return    
+        if current < self.best:
+            self.best = current
+            self.epochs_since_best = 0
+            if self.restore_best_weights:
+                self.best_weights = self.model.get_weights()
+        else:
+            self.epochs_since_best += 1  
+        if self.epochs_since_best >= self.patience:
+            self.model.stop_training = True
+            if self.restore_best_weights and self.best_weights is not None and epoch >= self.min_epochs:
+                self.model.set_weights(self.best_weights)
+                
+    early_stopping = CustomEarlyStopping(min_epochs=30, patience=3, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=0.001)
     
     history = model.fit(X, y, epochs=60, batch_size=int(batch_size), validation_split=0.2, callbacks=[early_stopping, reduce_lr], verbose=0)
