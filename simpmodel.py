@@ -120,7 +120,7 @@ def create_model(trial, window_size, loss_functions):
     recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.2)
     dropout=trial.suggest_float('dropout_rate', 0.1, 0.4)
     activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh'])
-    kl=l2(trial.suggest_float('l2', 0.01, 0.1)
+    kl=trial.suggest_float('l2', 0.01, 0.2)
     optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]    
     ls =int(trial.suggest_int('lstm_units', 50, 150))
     
@@ -141,7 +141,7 @@ def create_model(trial, window_size, loss_functions):
         recurrent_dropout=recurrent_dropout
     ))
     model.add(Dropout(dropout))
-    model.add(Dense(1, kernel_regularizer=kl))) 
+    model.add(Dense(1, kernel_regularizer=l2(kl))) 
     
     model.compile(
         optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 3)],
