@@ -72,10 +72,11 @@ early_stopping = EarlyStopping(monitor='val_loss', patience=10)
         
 def stk_dt(tk):
    data1 = yf.download(tk, period='5y')['Close'].dropna()
+   cmp = data1.iloc[-1].round(2)
    data = np.log(data1 / data1.shift(1)).dropna()
    z_score = (data - data.mean()) / data.std()
    data_without_outliers = data[(z_score < 2) & (z_score > -2)]
-   return data_without_outliers
+   return data_without_outliers, cmp
 
 loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanAbsolutePercentageError()]
 loss_categories = ['mse', 'mape']
@@ -220,8 +221,7 @@ b= download_file(url2, filename2)
 if a>b:
   t = ast.literal_eval(lines[b])
   print("Stock name:", t[0])
-  data = stk_dt(t[0])
-  cmp = data.iloc[-1].round(2)
+  data,cmp= stk_dt(t[0])
   t[22], t[23], t[24], t[25] = new_lstm(t[0], data,cmp)
   t[31] = 'Y'
   print("Forecasted prices:", t[22], t[23], t[24], t[25])
