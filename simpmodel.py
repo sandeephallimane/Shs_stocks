@@ -159,8 +159,9 @@ def new_lstm(ti, data, cmp):
     best_trials = study.best_trials
     best_trial = best_trials[0]
     print("best_trial.params:", best_trial.params) 
-    best_model_key = f'model_{best_trial.number}'  
-    best_model = best_trial.user_attrs[best_model_key] 
+    best_model_key = f'model_{best_trial.number}.h5'
+    best_model = load_model(best_model_key)
+    
     forecast_period = 124
     forecasted_prices = []
     window_size = int(best_trial.params['window_size'])
