@@ -240,7 +240,7 @@ def new_lstm(ti, data, cmp):
         prediction = best_model.predict(current_data_reshaped)
         print("Day:",ty)
         print("Prediction:",prediction)
-        forecasted_price = prediction[0]  
+        forecasted_price = prediction[0,-1,0]  
         forecasted_prices.append(forecasted_price)
         current_data = np.append(current_data[1:], forecasted_price)
         ty=ty+1
