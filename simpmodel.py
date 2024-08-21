@@ -71,7 +71,8 @@ filename2 = "newdata.txt"
 early_stopping = EarlyStopping(monitor='val_loss', patience=10)
         
 def stk_dt(tk):
-   data = yf.download(tk, period='5y')['Close'].dropna()
+   data1 = yf.download(tk, period='5y')['Close'].dropna()
+   data = np.log(data1 / data1.shift(1)).dropna()
    z_score = (data - data.mean()) / data.std()
    data_without_outliers = data[(z_score < 2) & (z_score > -2)]
    return data_without_outliers
@@ -205,10 +206,13 @@ def new_lstm(ti, data, cmp):
         current_data = np.append(current_data[1:], forecasted_price)
         ty=ty+1
     
-    forecasted_prices = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
-    min_p = np.min(forecasted_prices).round(2)
-    max_p = np.max(forecasted_prices).round(2)
-    avg_p = np.mean(forecasted_prices).round(2)
+    forecasted_price = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
+    fp=[]
+    for f in forecasted_price:
+        fp.append(cmp*(1+f)) 
+    min_p = np.min(fp).round(2)
+    max_p = np.max(fp).round(2)
+    avg_p = np.mean(fp).round(2)
     ret_p = ((avg_p-cmp)*100/cmp).round(2)
     return min_p, max_p, avg_p, ret_p
 
