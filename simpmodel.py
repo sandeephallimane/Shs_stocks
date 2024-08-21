@@ -86,7 +86,7 @@ loss_functions_dict = {
         'mape': tf.keras.losses.MeanAbsolutePercentageError() 
     }
 
-def create_model(trial, window_size):
+def create_model1(trial, window_size):
     loss = tf.keras.losses.MeanSquaredError()
     recurrent_dropout=0.2
     dropout=trial.suggest_float('dropout_rate', 0.2, 0.5)
@@ -113,7 +113,40 @@ def create_model(trial, window_size):
     )
     
     return model
-
+    
+def create_model(trial, window_size):
+    loss = tf.keras.losses.MeanSquaredError()
+    recurrent_dropout = 0.2
+    dropout = trial.suggest_float('dropout_rate', 0.2, 0.5)
+    gru_unit = trial.suggest_categorical('gru_units', [50, 60, 70, 80, 90, 100])
+    lstm_layers = trial.suggest_int('lstm_layers', 1, 3)
+    dense_units = trial.suggest_categorical('dense_units', [64, 128, 256])
+    
+    model = Sequential()
+    for _ in range(lstm_layers):
+        model.add(LSTM(
+            gru_unit,
+            input_shape=(window_size, 1) if _ == 0 else (None, None),
+            activation='tanh',
+            dropout=dropout,
+            recurrent_dropout=recurrent_dropout
+        ))
+    
+    model.add(BatchNormalization())
+    model.add(Dropout(dropout))
+    model.add(Dense(dense_units, activation='relu'))
+    model.add(Dense(1, kernel_regularizer=l2(0.2)))
+    
+    optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]
+    optimizer_idx = trial.suggest_int('optimizer_idx', 0, 3)
+    model.compile(
+        optimizer=optimizers[optimizer_idx],
+        loss=loss,
+        metrics=['mean_squared_error', 'mean_absolute_percentage_error']
+    )
+    
+    return model
+    
 early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patience=15,restore_best_weights=True) 
     
 
