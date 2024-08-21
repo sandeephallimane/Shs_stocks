@@ -74,11 +74,11 @@ def stk_dt(tk):
    data_without_outliers = data[(z_score < 2) & (z_score > -2)]
    return data_without_outliers
 
-loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanAbsoluteError()]
-loss_categories = ['mse', 'mae']
+loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanSquaredError.MeanAbsolutePercentageError()]
+loss_categories = ['mse', 'mape']
 loss_functions_dict = {
         'mse': tf.keras.losses.MeanSquaredError(),
-        'mae': tf.keras.losses.MeanAbsoluteError()
+        'mape': tf.keras.losses.MeanAbsolutePercentageError() 
     }
 
 def create_model(trial, window_size,loss_functions):
@@ -110,8 +110,6 @@ def create_model(trial, window_size,loss_functions):
     return model
 
 early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patience=15,restore_best_weights=True) 
-
-def create_best_model(dropout,gru_unit, optimizer, window_size,loss):
     
 def optimize_model(trial: Trial, scaled_data: np.ndarray):
     window_size = trial.suggest_int('window_size', 80, 130)
