@@ -109,34 +109,13 @@ def create_model(trial, window_size,loss_functions):
     
     return model
 
-early_stopping = EarlyStopping(monitor='loss', patience=10)
+early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patience=15,restore_best_weights=True) 
 
 def create_best_model(dropout,gru_unit, optimizer, window_size,loss):
-    recurrent_dropout=0.2
-    model = Sequential()
-    model.add(LSTM(
-        gru_unit,
-        input_shape=(window_size, 1),  
-        activation='tanh',
-        dropout=dropout,
-        recurrent_dropout=recurrent_dropout
-    ))
-    
-    model.add(BatchNormalization())
-    model.add(Dropout(dropout))
-    model.add(Dense(1, kernel_regularizer=l2(0.05)))
-    
-    optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]    
-    model.compile(
-        optimizer=optimizers[optimizer],
-        loss=loss,
-        metrics=['mean_squared_error','mean_absolute_percentage_error']
-    )
-    return model
     
 def optimize_model(trial: Trial, scaled_data: np.ndarray):
-    window_size = trial.suggest_int('window_size', 60, 120)
-    batch_size = 32
+    window_size = trial.suggest_int('window_size', 80, 130)
+    batch_size = trial.suggest_int('window_size', 32, 64)
     
     X, y = [], []
     for i in range(len(scaled_data) - window_size):
@@ -152,8 +131,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     
     mape = history.history['val_mean_absolute_percentage_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
-    trial.user_attrs['model'] = model
-    
+    trial.user_attrs[f'model_{trial.number}'] = model  
     return mape, mse
 def new_lstm(ti, data, cmp):
     script_name = ti
@@ -167,10 +145,10 @@ def new_lstm(ti, data, cmp):
     study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=200, n_jobs=8)
     
     best_trials = study.best_trials
-    best_trial = best_trials[0]  
+    best_trial = best_trials[0]
     print("best_trial.params:", best_trial.params) 
-    best_model = best_trial.user_attrs['model']
-    
+    best_model_key = f'model_{best_trial.number}'  
+    best_model = best_trial.user_attrs[best_model_key] 
     forecast_period = 124
     forecasted_prices = []
     window_size = int(best_trial.params['window_size'])
