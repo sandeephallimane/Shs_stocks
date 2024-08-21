@@ -76,6 +76,7 @@ def stk_dt(tk):
    data = np.log(data1 / data1.shift(1)).dropna()
    z_score = (data - data.mean()) / data.std()
    data_without_outliers = data[(z_score < 2) & (z_score > -2)]
+   print("data length:", len(data_without_outliers)) 
    return data_without_outliers, cmp
 
 loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanAbsolutePercentageError()]
