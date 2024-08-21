@@ -129,7 +129,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     
     mape = history.history['val_mean_absolute_percentage_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
-    trial.user_attrs[f'model_{trial.number}'] = model  
+    trial.user_attrs[f'model_{trial.number}'] = history 
     return mape, mse
 def new_lstm(ti, data, cmp):
     script_name = ti
@@ -138,8 +138,15 @@ def new_lstm(ti, data, cmp):
 
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaled_data = scaler.fit_transform(data.values.reshape(-1, 1)) 
-    sampler = TPESampler()   
-    study = create_study(directions=['minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True, sampler=sampler)
+    sampler = TPESampler()
+    study = create_study(
+        directions=['minimize', 'minimize'],
+        study_name=study_name,
+        storage=storage,
+        load_if_exists=True,
+        sampler=sampler,
+        pruner=MedianPruner()  # Optional: use a pruner if needed
+    )
     study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=200, n_jobs=8)
     
     best_trials = study.best_trials
