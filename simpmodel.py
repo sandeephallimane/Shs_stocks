@@ -12,6 +12,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLRO
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.optimizers import Adam, RMSprop, SGD, AdamW, Nadam
 import optuna
+from optuna.pruners import MedianPruner
 from sklearn.model_selection import TimeSeriesSplit
 import sqlite3
 from optuna.trial import Trial
