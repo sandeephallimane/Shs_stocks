@@ -86,12 +86,12 @@ loss_functions_dict = {
         'mape': tf.keras.losses.MeanAbsolutePercentageError() 
     }
 
-def create_model(trial, window_size,loss_functions):
+def create_model(trial, window_size):
     loss_name = trial.suggest_categorical('loss_function', loss_categories)
     loss = tf.keras.losses.MeanSquaredError()
     recurrent_dropout=0.2
     dropout=trial.suggest_float('dropout_rate', 0.2, 0.5)
-    gru_unit=trial.suggest_int('gru_units', 50, 100)
+    gru_unit=trial.suggest_categorical('gru_units', [50, 60,70,80,90,100])
     model = Sequential()
     model.add(LSTM(
         gru_unit,
@@ -107,7 +107,8 @@ def create_model(trial, window_size,loss_functions):
     
     optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]    
     model.compile(
-        optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 3)],
+       #optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 3)],
+        optimizer= Nadam(),
         loss=loss,
         metrics=['mean_squared_error','mean_absolute_percentage_error']
     )
@@ -119,15 +120,15 @@ early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patienc
 
 
 def optimize_model(trial: Trial, scaled_data: np.ndarray):
-    window_size = trial.suggest_int('window_size', 80, 130)
-    batch_size = trial.suggest_int('batch_size', 32, 64)  # Correct the parameter name
+    window_size = trial.suggest_categorical('window_size', [10, 20, 30, 40, 50, 60,70,80,90,100])
+    batch_size = trial.suggest_categorical('batch_size', 32, 64) 
 
     X, y = [], []
     for i in range(len(scaled_data) - window_size):
         X.append(scaled_data[i:i + window_size])
         y.append(scaled_data[i + window_size])
     X, y = np.array(X), np.array(y)    
-    model = create_model(trial, window_size, loss_functions)
+    model = create_model(trial, window_size)
     class CustomEarlyStopping(tf.keras.callbacks.Callback):
       def __init__(self, min_epochs=30, patience=0, restore_best_weights=True):
         super(CustomEarlyStopping, self).__init__()
@@ -158,7 +159,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
                 self.model.set_weights(self.best_weights)
                 
     early_stopping = CustomEarlyStopping(min_epochs=30, patience=10, restore_best_weights=True)
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=0.001)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=15, min_lr=0.001)
     
     history = model.fit(X, y, epochs=60, batch_size=int(batch_size), validation_split=0.2, verbose=0)
     
