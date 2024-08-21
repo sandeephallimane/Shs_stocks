@@ -79,11 +79,11 @@ def stk_dt(tk):
    print("data length:", len(data_without_outliers)) 
    return data_without_outliers, cmp
 
-loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanAbsolutePercentageError()]
-loss_categories = ['mse', 'mape']
+loss_functions = [tf.keras.losses.MeanSquaredError(), tf.keras.losses.MeanAbsoluteError()]
+loss_categories = ['mse', 'mae']
 loss_functions_dict = {
         'mse': tf.keras.losses.MeanSquaredError(),
-        'mape': tf.keras.losses.MeanAbsolutePercentageError() 
+        'mae': tf.keras.losses.MeanAbsoluteError() 
     }
 
 def create_model1(trial, window_size):
@@ -114,38 +114,41 @@ def create_model1(trial, window_size):
     
     return model
     
-def create_model(trial, window_size):
-    loss = tf.keras.losses.MeanSquaredError()
-    recurrent_dropout = 0.2
-    dropout = trial.suggest_float('dropout_rate', 0.2, 0.5)
-    gru_unit = trial.suggest_categorical('gru_units', [50, 60, 70, 80, 90, 100])
-    lstm_layers = trial.suggest_int('lstm_layers', 1, 3)
-    dense_units = trial.suggest_categorical('dense_units', [64, 128, 256])
+def create_model(trial, window_size, loss_functions):
+    loss_name = trial.suggest_categorical('loss_function', loss_categories)
+    loss = loss_functions_dict[loss_name]
+    recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.2)
+    dropout=trial.suggest_float('dropout_rate', 0.1, 0.4)
+    activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh'])
+    kl=l2(trial.suggest_float('l2', 0.01, 0.1)
+    optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]    
     
     model = Sequential()
-    for _ in range(lstm_layers):
-        model.add(LSTM(
-            gru_unit,
-            input_shape=(window_size, 1) if _ == 0 else (None, None),
-            activation='tanh',
-            dropout=dropout,
-            recurrent_dropout=recurrent_dropout
-        ))
-    
+    model.add(LSTM(
+        int(trial.suggest_int('lstm_units', 50, 100)), 
+        input_shape=(window_size, 1), 
+        activation=activation,
+        dropout=dropout,
+        recurrent_dropout=recurrent_dropout
+    ))
     model.add(BatchNormalization())
     model.add(Dropout(dropout))
-    model.add(Dense(dense_units, activation='relu'))
-    model.add(Dense(1, kernel_regularizer=l2(0.2)))
     
-    optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]
-    optimizer_idx = trial.suggest_int('optimizer_idx', 0, 3)
+    model.add(GRU(
+        int(trial.suggest_int('gru_units', 50, 100)),
+        dropout=dropout,
+        recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.2)
+    ))
+    model.add(Dropout(dropout))
+    model.add(Dense(1, kernel_regularizer=kl))) 
+    
     model.compile(
-        optimizer=optimizers[optimizer_idx],
+        optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 3)],
         loss=loss,
         metrics=['mean_squared_error', 'mean_absolute_percentage_error']
     )
-    
     return model
+
     
 early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patience=15,restore_best_weights=True) 
     
@@ -160,7 +163,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
         X.append(scaled_data[i:i + window_size])
         y.append(scaled_data[i + window_size])
     X, y = np.array(X), np.array(y)    
-    model = create_model(trial, window_size)
+    model = create_model(trial, window_size, loss_functions)
     class CustomEarlyStopping(tf.keras.callbacks.Callback):
       def __init__(self, min_epochs=30, patience=0, restore_best_weights=True):
         super(CustomEarlyStopping, self).__init__()
