@@ -233,7 +233,7 @@ def new_lstm(ti, data, cmp):
         sampler=sampler,
         pruner=MedianPruner()  
     )
-    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=200, n_jobs=8)
+    study.optimize(lambda trial: optimize_model(trial, scaled_data), n_trials=100, n_jobs=8)
     
     best_trials = study.best_trials
     best_trial = best_trials[0]
