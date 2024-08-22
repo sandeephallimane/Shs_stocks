@@ -8,7 +8,7 @@ from tensorflow.keras.layers import Bidirectional, LSTM, GRU, Dense, Dropout, Ba
 from tensorflow.keras.losses import MeanSquaredError, MeanAbsoluteError, MeanSquaredLogarithmicError,Huber
 from tensorflow.keras.metrics import MeanAbsoluteError, MeanSquaredError,MeanAbsolutePercentageError , MeanSquaredLogarithmicError
 from scipy import stats
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, LearningRateScheduler
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.optimizers import Adam, RMSprop, SGD, AdamW, Nadam
 import optuna
@@ -96,8 +96,7 @@ loss_categories = ['mse', 'mae']
 loss_functions_dict = {
         'mse': tf.keras.losses.MeanSquaredError(),
         'mae': tf.keras.losses.MeanAbsoluteError() 
-    }
-
+}
 
 def create_model(trial, window_size, loss_functions):
     # Define loss function
@@ -154,14 +153,22 @@ def create_model(trial, window_size, loss_functions):
     model.add(Dense(1, kernel_regularizer=l2(kl))) 
     
     # Compile model
+    optimizer = optimizers[trial.suggest_int('optimizer_idx', 0, 2)]
     model.compile(
-        optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 2)],
+        optimizer=optimizer,
         loss=Huber(),
         metrics=['mean_squared_error', 'mean_absolute_percentage_error']
     )
     
-    return model
-
+    # Define learning rate scheduler
+    def lr_scheduler(epoch, lr):
+        # Example: exponential decay
+        decay_rate = trial.suggest_float('decay_rate', 0.1, 0.9)
+        return lr * decay_rate ** epoch
+    
+    lr_schedule = LearningRateScheduler(lr_scheduler)
+    
+    return model, lr_schedule
 
 def create_model1(trial, window_size):
     loss = tf.keras.losses.MeanSquaredError()
@@ -242,7 +249,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
         y.append(scaled_data[i + window_size])
     X, y = np.array(X), np.array(y)    
     X_train, X_val_test, y_train, y_val_test = train_test_split(X, y, test_size=0.15, random_state=42)
-    model = create_model(trial, window_size, loss_functions)
+    model, lrs= create_model(trial, window_size, loss_functions)
     class CustomEarlyStopping(tf.keras.callbacks.Callback):
       def __init__(self, min_epochs=30, patience=0, restore_best_weights=True):
         super(CustomEarlyStopping, self).__init__()
@@ -275,7 +282,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     early_stopping = CustomEarlyStopping(min_epochs=30, patience=10, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=15, min_lr=0.001)
     
-    history = model.fit(X_train, y_train, epochs=60, batch_size=int(batch_size), validation_data=(X_val_test, y_val_test), verbose=0)
+    history = model.fit(X_train, y_train, epochs=60, batch_size=int(batch_size), validation_data=(X_val_test, y_val_test), call_back=[lrs],verbose=0)
     
     mape = history.history['val_mean_absolute_percentage_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
