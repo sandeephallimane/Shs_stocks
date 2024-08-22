@@ -157,7 +157,7 @@ def create_model(trial, window_size, loss_functions):
     
     model.compile(
         optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 3)],
-        loss=loss,
+        loss=Huber(),
         metrics=['mean_squared_error', 'mean_absolute_percentage_error']
     )
     return model
