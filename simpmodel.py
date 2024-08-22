@@ -82,8 +82,9 @@ def choose_scaler(data):
     return scaler
       
 def stk_dt(tk):
-   data = yf.download(tk, period='5y')['Close'].dropna()
-   cmp = data.iloc[-1].round(2)
+   data1 = yf.download(tk, period='5y')['Close'].dropna()
+   cmp = data1.iloc[-1].round(2)
+   data = data1
    data12 = (data1.diff()).dropna() 
    data11 = np.log(data1 / data1.shift(1)).dropna()
    z_score = (data - data.mean()) / data.std()
