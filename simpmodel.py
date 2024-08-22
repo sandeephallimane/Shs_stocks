@@ -220,6 +220,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     return mape, mse
 
 def new_lstm(ti, data, cmp):
+    npt= cmp
     script_name = ti
     study_name = script_name + '21_study'
     storage = 'sqlite:///' + script_name + '_study.db'
@@ -260,11 +261,10 @@ def new_lstm(ti, data, cmp):
     
     forecasted_price = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
     fp=[]
-    np= cmp
     for f in forecasted_price:
-        np= np+f
+        nnpt npt+f
         #fp.append(cmp*(1+f)) 
-        fp.append(np)
+        fp.append(npt)
     min_p = np.min(fp).round(2)
     max_p = np.max(fp).round(2)
     avg_p = np.mean(fp).round(2)
