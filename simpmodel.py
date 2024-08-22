@@ -84,7 +84,8 @@ def choose_scaler(data):
 def stk_dt(tk):
    data1 = yf.download(tk, period='5y')['Close'].dropna()
    cmp = data1.iloc[-1].round(2)
-   data = np.log(data1 / data1.shift(1)).dropna()
+   data = (data1.diff()).dropna() 
+   data11 = np.log(data1 / data1.shift(1)).dropna()
    z_score = (data - data.mean()) / data.std()
    data_without_outliers = data[(z_score < 2) & (z_score > -2)]
    print("data length:", len(data_without_outliers)) 
@@ -258,8 +259,11 @@ def new_lstm(ti, data, cmp):
     
     forecasted_price = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
     fp=[]
+    np= cmp
     for f in forecasted_price:
-        fp.append(cmp*(1+f)) 
+        np= np+f
+        #fp.append(cmp*(1+f)) 
+        fp.append(np)
     min_p = np.min(fp).round(2)
     max_p = np.max(fp).round(2)
     avg_p = np.mean(fp).round(2)
