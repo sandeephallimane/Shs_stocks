@@ -133,7 +133,7 @@ def create_model(trial, window_size, loss_functions):
     dropout=trial.suggest_float('dropout_rate', 0.1, 0.4)
     activation=trial.suggest_categorical('activation', ['relu', 'leaky_relu', 'swish', 'tanh'])
     kl=trial.suggest_float('l2', 0.01, 0.2)
-    optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]    
+    optimizers = [Adam(),AdamW(), Nadam()]    
     ls =int(trial.suggest_int('lstm_units', 50, 150))
     
     model = Sequential()
@@ -156,7 +156,7 @@ def create_model(trial, window_size, loss_functions):
     model.add(Dense(1, kernel_regularizer=l2(kl))) 
     
     model.compile(
-        optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 3)],
+        optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 2)],
         loss=Huber(),
         metrics=['mean_squared_error', 'mean_absolute_percentage_error']
     )
