@@ -2,7 +2,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler,StandardScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Bidirectional, LSTM, GRU, Dense, Dropout, BatchNormalization
 from tensorflow.keras.losses import MeanSquaredError, MeanAbsoluteError, MeanSquaredLogarithmicError,Huber
@@ -69,7 +69,18 @@ url2 = "https://raw.githubusercontent.com/sandeephallimane/Shs_stocks/main/updda
 filename2 = "newdata.txt"
 
 early_stopping = EarlyStopping(monitor='val_loss', patience=10)
-        
+
+def choose_scaler(data):
+    # Shapiro-Wilk test
+    stat, p = stats.shapiro(data)
+    if p > 0.05:
+        # Normally distributed, use standardization
+        scaler = StandardScaler()
+    else:
+        # Not normally distributed, use normalization
+        scaler = MinMaxScaler()
+    return scaler
+      
 def stk_dt(tk):
    data1 = yf.download(tk, period='5y')['Close'].dropna()
    cmp = data1.iloc[-1].round(2)
@@ -211,7 +222,7 @@ def new_lstm(ti, data, cmp):
     study_name = script_name + '21_study'
     storage = 'sqlite:///' + script_name + '_study.db'
 
-    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaler = choose_scaler(data)
     scaled_data = scaler.fit_transform(data.values.reshape(-1, 1)) 
     sampler = TPESampler()
     study = create_study(
