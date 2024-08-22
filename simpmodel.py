@@ -98,6 +98,71 @@ loss_functions_dict = {
         'mae': tf.keras.losses.MeanAbsoluteError() 
     }
 
+
+def create_model(trial, window_size, loss_functions):
+    # Define loss function
+    loss_name = trial.suggest_categorical('loss_function', loss_categories)
+    loss = loss_functions_dict[loss_name]
+    
+    # Hyperparameters
+    recurrent_dropout = trial.suggest_float('recurrent_dropout', 0.1, 0.2)
+    dropout = trial.suggest_float('dropout_rate', 0.1, 0.4)
+    activation = trial.suggest_categorical('activation', ['relu', 'tanh'])  # Consider using standard activations
+    kl = trial.suggest_float('l2', 0.01, 0.2)
+    learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-2, log=True)
+    optimizers = [Adam(learning_rate=learning_rate), AdamW(learning_rate=learning_rate), Nadam(learning_rate=learning_rate)]
+    lstm_units = int(trial.suggest_int('lstm_units', 50, 150))
+    use_bidirectional_lstm = trial.suggest_categorical('use_bidirectional_lstm', [True, False])
+    use_bidirectional_gru = trial.suggest_categorical('use_bidirectional_gru', [True, False])
+    
+    # Build model
+    model = Sequential()
+    
+    if use_bidirectional_lstm:
+        model.add(Bidirectional(LSTM(
+            lstm_units, return_sequences=True,
+            activation=activation,
+            dropout=dropout,
+            recurrent_dropout=recurrent_dropout
+        ), input_shape=(window_size, 1)))
+    else:
+        model.add(LSTM(
+            lstm_units, return_sequences=True,
+            input_shape=(window_size, 1), 
+            activation=activation,
+            dropout=dropout,
+            recurrent_dropout=recurrent_dropout
+        ))
+    
+    model.add(BatchNormalization())
+    model.add(Dropout(dropout))
+    
+    if use_bidirectional_gru:
+        model.add(Bidirectional(GRU(
+            lstm_units, return_sequences=True,
+            dropout=dropout,
+            recurrent_dropout=recurrent_dropout
+        )))
+    else:
+        model.add(GRU(
+            lstm_units, return_sequences=True,
+            dropout=dropout,
+            recurrent_dropout=recurrent_dropout
+        ))
+    
+    model.add(Dropout(dropout))
+    model.add(Dense(1, kernel_regularizer=l2(kl))) 
+    
+    # Compile model
+    model.compile(
+        optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 2)],
+        loss=Huber(),
+        metrics=['mean_squared_error', 'mean_absolute_percentage_error']
+    )
+    
+    return model
+
+
 def create_model1(trial, window_size):
     loss = tf.keras.losses.MeanSquaredError()
     recurrent_dropout=0.2
@@ -126,7 +191,7 @@ def create_model1(trial, window_size):
     
     return model
     
-def create_model(trial, window_size, loss_functions):
+def create_model2(trial, window_size, loss_functions):
     loss_name = trial.suggest_categorical('loss_function', loss_categories)
     loss = loss_functions_dict[loss_name]
     recurrent_dropout=trial.suggest_float('recurrent_dropout', 0.1, 0.2)
