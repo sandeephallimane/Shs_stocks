@@ -168,7 +168,7 @@ early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patienc
 
 
 def optimize_model(trial: Trial, scaled_data: np.ndarray):
-    window_size = trial.suggest_init('window_size', 50, 100)
+    window_size = trial.suggest_init('window_size', 40, 120)
     batch_size = trial.suggest_categorical('batch_size', [32, 64]) 
 
     X, y = [], []
