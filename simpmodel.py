@@ -214,10 +214,11 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     
     mape = history.history['val_mean_absolute_percentage_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
+    rmse = np.sqrt(mse) 
     model_filename = f"model_{trial.number}.keras"
     save_model(model, model_filename)
     
-    return mape, mse
+    return mape, rmse
 
 def new_lstm(ti, data, cmp):
     npt= cmp
