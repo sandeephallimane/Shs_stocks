@@ -102,7 +102,7 @@ def create_model1(trial, window_size):
     loss = tf.keras.losses.MeanSquaredError()
     recurrent_dropout=0.2
     dropout=trial.suggest_float('dropout_rate', 0.2, 0.5)
-    gru_unit=trial.suggest_init('gru_units', 50, 100)
+    gru_unit=trial.suggest_int('gru_units', 50, 100)
     model = Sequential()
     model.add(LSTM(
         gru_unit,
@@ -168,7 +168,7 @@ early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patienc
 
 
 def optimize_model(trial: Trial, scaled_data: np.ndarray):
-    window_size = trial.suggest_init('window_size', 40, 120)
+    window_size = trial.suggest_int('window_size', 40, 120)
     batch_size = trial.suggest_categorical('batch_size', [32, 64]) 
 
     X, y = [], []
