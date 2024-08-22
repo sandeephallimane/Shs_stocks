@@ -107,45 +107,52 @@ def create_model(trial, window_size, loss_functions):
     # Hyperparameters
     recurrent_dropout = trial.suggest_float('recurrent_dropout', 0.1, 0.2)
     dropout = trial.suggest_float('dropout_rate', 0.1, 0.4)
-    activation = trial.suggest_categorical('activation', ['relu', 'tanh'])  # Consider using standard activations
+    activation = trial.suggest_categorical('activation', ['relu', 'tanh', 'swish'])
     kl = trial.suggest_float('l2', 0.01, 0.2)
     learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-2, log=True)
     optimizers = [Adam(learning_rate=learning_rate), AdamW(learning_rate=learning_rate), Nadam(learning_rate=learning_rate)]
     lstm_units = int(trial.suggest_int('lstm_units', 50, 150))
     use_bidirectional_lstm = trial.suggest_categorical('use_bidirectional_lstm', [True, False])
     use_bidirectional_gru = trial.suggest_categorical('use_bidirectional_gru', [True, False])
+    num_layers = trial.suggest_int('num_layers', 1, 3)
     
     # Build model
     model = Sequential()
     
-    if use_bidirectional_lstm:
-        model.add(Bidirectional(LSTM(
-            lstm_units, return_sequences=True,
-            activation=activation,
-            dropout=dropout,
-            recurrent_dropout=recurrent_dropout
-        ), input_shape=(window_size, 1)))
-    else:
-        model.add(LSTM(
-            lstm_units, return_sequences=True,
-            input_shape=(window_size, 1), 
-            activation=activation,
-            dropout=dropout,
-            recurrent_dropout=recurrent_dropout
-        ))
-    
-    model.add(BatchNormalization())
-    model.add(Dropout(dropout))
+    for i in range(num_layers):
+        if i == 0:
+            input_shape = (window_size, 1)
+        else:
+            input_shape = None
+        
+        if use_bidirectional_lstm:
+            model.add(Bidirectional(LSTM(
+                lstm_units, return_sequences=True,
+                activation=activation,
+                dropout=dropout,
+                recurrent_dropout=recurrent_dropout
+            ), input_shape=input_shape))
+        else:
+            model.add(LSTM(
+                lstm_units, return_sequences=True,
+                input_shape=input_shape, 
+                activation=activation,
+                dropout=dropout,
+                recurrent_dropout=recurrent_dropout
+            ))
+        
+        model.add(BatchNormalization())
+        model.add(Dropout(dropout))
     
     if use_bidirectional_gru:
         model.add(Bidirectional(GRU(
-            lstm_units, return_sequences=True,
+            lstm_units, return_sequences=False,
             dropout=dropout,
             recurrent_dropout=recurrent_dropout
         )))
     else:
         model.add(GRU(
-            lstm_units, return_sequences=True,
+            lstm_units, return_sequences=False,
             dropout=dropout,
             recurrent_dropout=recurrent_dropout
         ))
@@ -157,13 +164,12 @@ def create_model(trial, window_size, loss_functions):
     optimizer = optimizers[trial.suggest_int('optimizer_idx', 0, 2)]
     model.compile(
         optimizer=optimizer,
-        loss=Huber(),
+        loss=Huber(),  
         metrics=['mean_squared_error', 'mean_absolute_percentage_error']
     )
     
     # Define learning rate scheduler
     def lr_scheduler(epoch, lr):
-        # Example: exponential decay
         decay_rate = trial.suggest_float('decay_rate', 0.1, 0.9)
         return lr * decay_rate ** epoch
     
