@@ -176,6 +176,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
         X.append(scaled_data[i:i + window_size])
         y.append(scaled_data[i + window_size])
     X, y = np.array(X), np.array(y)    
+    X_train, X_val_test, y_train, y_val_test = train_test_split(X, y, test_size=0.15, random_state=42)
     model = create_model(trial, window_size, loss_functions)
     class CustomEarlyStopping(tf.keras.callbacks.Callback):
       def __init__(self, min_epochs=30, patience=0, restore_best_weights=True):
@@ -209,7 +210,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     early_stopping = CustomEarlyStopping(min_epochs=30, patience=10, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=15, min_lr=0.001)
     
-    history = model.fit(X, y, epochs=60, batch_size=int(batch_size), validation_split=0.2, verbose=0)
+    history = model.fit(X_train, y_train, epochs=60, batch_size=int(batch_size), validation_data=0.2, verbose=0)
     
     mape = history.history['val_mean_absolute_percentage_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
