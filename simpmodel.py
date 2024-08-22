@@ -282,7 +282,7 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
     early_stopping = CustomEarlyStopping(min_epochs=30, patience=10, restore_best_weights=True)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=15, min_lr=0.001)
     
-    history = model.fit(X_train, y_train, epochs=60, batch_size=int(batch_size), validation_data=(X_val_test, y_val_test), call_back=[lrs],verbose=0)
+    history = model.fit(X_train, y_train, epochs=60, batch_size=int(batch_size), validation_data=(X_val_test, y_val_test), callbacks=[lrs],verbose=0)
     
     mape = history.history['val_mean_absolute_percentage_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
