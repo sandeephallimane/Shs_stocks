@@ -262,7 +262,7 @@ def new_lstm(ti, data, cmp):
     forecasted_price = scaler.inverse_transform(np.array(forecasted_prices).reshape(-1, 1))
     fp=[]
     for f in forecasted_price:
-        nnpt npt+f
+        npt=npt+f
         #fp.append(cmp*(1+f)) 
         fp.append(npt)
     min_p = np.min(fp).round(2)
