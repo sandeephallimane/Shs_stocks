@@ -102,7 +102,7 @@ def create_model1(trial, window_size):
     loss = tf.keras.losses.MeanSquaredError()
     recurrent_dropout=0.2
     dropout=trial.suggest_float('dropout_rate', 0.2, 0.5)
-    gru_unit=trial.suggest_categorical('gru_units', [50, 60,70,80,90,100])
+    gru_unit=trial.suggest_init('gru_units', 50, 100)
     model = Sequential()
     model.add(LSTM(
         gru_unit,
@@ -119,7 +119,7 @@ def create_model1(trial, window_size):
     optimizers = [Adam(), RMSprop(), AdamW(), Nadam()]    
     model.compile(
        #optimizer=optimizers[trial.suggest_int('optimizer_idx', 0, 3)],
-        optimizer= Nadam(),
+        optimizer= Adam(),
         loss=loss,
         metrics=['mean_squared_error','mean_absolute_percentage_error']
     )
@@ -168,7 +168,7 @@ early_stopping = EarlyStopping(monitor='mean_absolute_percentage_error', patienc
 
 
 def optimize_model(trial: Trial, scaled_data: np.ndarray):
-    window_size = trial.suggest_categorical('window_size', [10, 20, 30, 40, 50, 60,70,80,90,100])
+    window_size = trial.suggest_init('window_size', 50, 100)
     batch_size = trial.suggest_categorical('batch_size', [32, 64]) 
 
     X, y = [], []
