@@ -287,9 +287,9 @@ def optimize_model(trial: Trial, scaled_data: np.ndarray):
                 self.model.set_weights(self.best_weights)
                 
     early_stopping = CustomEarlyStopping(min_epochs=30, patience=10, restore_best_weights=True)
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=15, min_lr=0.001)
+    reduce_lr = ReduceLROnPlateau(monitor='mean_absolute_percentage_error', factor=0.2, patience=25, min_lr=0.001)
     
-    history = model.fit(X_train, y_train, epochs=60, batch_size=int(batch_size), validation_data=(X_val_test, y_val_test), callbacks=[lrs],verbose=0)
+    history = model.fit(X_train, y_train, epochs=60, batch_size=int(batch_size), validation_data=(X_val_test, y_val_test), callbacks=[lrs, reduce_lr],verbose=0)
     
     mape = history.history['val_mean_absolute_percentage_error'][-1]
     mse = history.history['val_mean_squared_error'][-1]
@@ -335,7 +335,10 @@ def new_lstm(ti, data, cmp):
         prediction = best_model.predict(current_data_reshaped)
         print("Day:",ty)
         print("Prediction:",prediction)
-        forecasted_price =prediction[0, -1, 0] if prediction.shape[2] > 0 else prediction[0, -1]
+        if len(prediction.shape) > 2:
+          forecasted_price = prediction[0, -1, 0]
+        else:
+          forecasted_price = prediction[0, -1]
         forecasted_prices.append(forecasted_price)
         current_data = np.append(current_data[1:], forecasted_price)
         ty=ty+1
