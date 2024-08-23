@@ -84,8 +84,8 @@ def choose_scaler(data):
 def stk_dt(tk):
    data1 = yf.download(tk, period='5y')['Close'].dropna()
    cmp = data1.iloc[-1].round(2)
-   data = data1
-   data12 = (data1.diff()).dropna() 
+   data124 = data1
+   data = data1.diff()).dropna() 
    data11 = np.log(data1 / data1.shift(1)).dropna()
    z_score = (data - data.mean()) / data.std()
    data_without_outliers = data[(z_score < 2) & (z_score > -2)]
