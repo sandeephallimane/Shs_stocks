@@ -28,11 +28,11 @@ jobs:
           python-version: '3.9'  
       - name: Execute Python dependency
         run: |
-         python -m pip uninstall -r requirements2n.txt &&
-         python -m pip cache purge &&
-         python -m pip install --upgrade pip setuptools &&
-         python -m brew install libomp &&
-         python -m pip install -r requirements2n.txt
+          python -m pip uninstall -r requirements2n.txt &&
+          python -m pip cache purge &&
+          python -m pip install --upgrade pip setuptools &&
+          brew install libomp &&
+          python -m pip install -r requirements2n.txt
     
       - name: Generate PDF
         env:
