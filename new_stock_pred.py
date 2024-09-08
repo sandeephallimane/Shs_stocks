@@ -103,8 +103,12 @@ def testrn(cp,prd,log_returns):
    
 
 def objective(trial,X_cp,y_cp,X_pd,y_pd,X_re,y_re,X_train_cp, X_test_cp, y_train_cp, y_test_cp,X_train_re, X_test_re, y_train_re, y_test_re,X_train_pd, X_test_pd, y_train_pd, y_test_pd):
-    model_type = trial.suggest_categorical('model_type', ['RandomForest', 'GradientBoosting', 'XGB', 'NeuralNetwork'])
-    model_inp= trial.suggest_categorical('model_inp', ['cp', 're', 'pd'])
+    mtt= ['RandomForest', 'GradientBoosting', 'XGB', 'NeuralNetwork']
+    mt = trial.suggest_int('model_type',0,3)
+    model_type = mtt[mt]
+    mii= ['cp', 're', 'pd']
+    mi= trial.suggest_int('model_inp',0, 2)
+    model_inp = mii[mi]
     if model_type == 'RandomForest':
       n_estimators = trial.suggest_int('n_estimators', 100, 1000)
       max_depth = trial.suggest_int('max_depth', 5, 20)
@@ -188,37 +192,37 @@ def ht(cp,prd,log_returns,cmp):
    best_trial = best_trials[0]  
    print("Best hyperparameters:", best_trial.params)
    print("input type:",best_trial.params['model_inp'])
-   if(best_trial.params['model_inp'] == 'cp'):
+   if(best_trial.params['model_inp'] == 0):
       X = X_cp
       y = y_cp
       forecast_input = cp.dropna().values[-1].reshape(1, -1)  
       it = 'cp'
-   elif(best_trial.params['model_inp'] == 'pd'):
+   elif(best_trial.params['model_inp'] == 1):
       X = X_pd
       y = y_pd
       forecast_input = prd.dropna().values[-1].reshape(1, -1)  
       it = 'pd'
-   elif(best_trial.params['model_inp'] == 're'):
+   elif(best_trial.params['model_inp'] == 2):
       X = X_re
       y = y_re
       forecast_input = log_returns.dropna().values[-1].reshape(1, -1)  
       it = 're'
    params = best_trial.params.copy()
    del params['model_inp']
-   if best_trial.params['model_type'] == 'RandomForest':
-     ru= params['model_type'] + " model"
+   if best_trial.params['model_type'] == 0:
+     ru= "RandomForest model"
      del params['model_type']
      best_model = RandomForestRegressor(**params)
-   elif best_trial.params['model_type'] == 'GradientBoosting':
-     ru= params['model_type'] + " model"
+   elif best_trial.params['model_type'] == 1:
+     ru=  "GradientBoosting model"
      del params['model_type']
      best_model = GradientBoostingRegressor(**params)
-   elif best_trial.params['model_type'] == 'XGB':
-     ru= params['model_type'] + " model"
+   elif best_trial.params['model_type'] == 2:
+     ru= "XGB model"
      del params['model_type']
      best_model = xgb.XGBRegressor(**params)
-   elif best_trial.params['model_type'] == 'NeuralNetwork':
-     ru= params['model_type'] + " model"
+   elif best_trial.params['model_type'] == 3:
+     ru= "NeuralNetwork model"
      del params['model_type']
      best_model = MLPRegressor(**params)
 
