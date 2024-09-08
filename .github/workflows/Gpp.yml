@@ -36,7 +36,7 @@ jobs:
     
       - name: Generate PDF
         env:
-          PASSWORD: ${{ secrets.MY_PASSWORD }} 
+          PASSWORD: ${{ secrets.M_P }} 
           TS: ${{ env.TS }}
           AK: ${{ secrets.GEMINI_API }}
           RE: ${{ secrets.RE_EMAIL }}
