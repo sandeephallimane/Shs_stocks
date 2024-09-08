@@ -16,8 +16,8 @@ from email.mime.base import MIMEBase
 from email import encoders
 import smtplib
 from jinja2 import Environment, FileSystemLoader
-#import pdfkit
-from weasyprint import HTML, CSS
+import pdfkit
+#from weasyprint import HTML, CSS
 import os
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import google.generativeai as genai
@@ -257,7 +257,7 @@ def generate_pdf(html_content,footer_html):
             'footer-html': footer_html,  # Path to footer HTML file
         }
         
-       # pdfkit.from_string(html_content, 'Arima_forecast_summary.pdf', options=options)
+       pdfkit.from_string(html_content, 'Arima_forecast_summary.pdf', options=options)
        # print("PDF created successfully: Arima_forecast_summary.pdf")
     except Exception as e:
         print(f"Error creating PDF: {e}")
@@ -459,9 +459,9 @@ email_body += f"""
        </html>"""
 
 #generate_pdf(email_body,footer_html)
-#pdfkit.from_string(email_body, 'Arima_forecast_summary.pdf')
-output_pdf = "Arima_forecast_summary.pdf"
-HTML(string=email_body).write_pdf(output_pdf)
+pdfkit.from_string(email_body, 'Arima_forecast_summary.pdf')
+#output_pdf = "Arima_forecast_summary.pdf"
+#HTML(string=email_body).write_pdf(output_pdf)
 
 def send_email(subject, html_content, receiver_emails, attachment_path=None):
     smtp_server = 'smtp.gmail.com'
@@ -506,7 +506,6 @@ e_body = """
   </body></html>
 """
 receiver_emails = re
-#receiver_emails = ['sandeephs.rvim22@gmail.com']
 
 # Path to the PDF file you want to attach
 pdf_attachment_path ='Arima_forecast_summary.pdf'
