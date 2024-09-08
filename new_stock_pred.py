@@ -183,7 +183,7 @@ def ht(cp,prd,log_returns,cmp):
    storage = 'sqlite:///' + 'a' + '_study.db'
    X_cp,y_cp,X_pd,y_pd,X_re,y_re,X_train_cp, X_test_cp, y_train_cp, y_test_cp,X_train_re, X_test_re, y_train_re, y_test_re,X_train_pd, X_test_pd, y_train_pd, y_test_pd = testrn(cp, prd,log_returns)
    study = optuna.create_study(directions=['minimize', 'minimize'], study_name=study_name, storage=storage, load_if_exists=True)
-   study.optimize(lambda trial: objective(trial, X_cp,y_cp,X_pd,y_pd,X_re,y_re,X_train_cp, X_test_cp, y_train_cp, y_test_cp,X_train_re, X_test_re, y_train_re, y_test_re,X_train_pd, X_test_pd, y_train_pd, y_test_pd), n_trials=1500)
+   study.optimize(lambda trial: objective(trial, X_cp,y_cp,X_pd,y_pd,X_re,y_re,X_train_cp, X_test_cp, y_train_cp, y_test_cp,X_train_re, X_test_re, y_train_re, y_test_re,X_train_pd, X_test_pd, y_train_pd, y_test_pd), n_trials=1500,n_jobs= -1) 
    best_trials = study.best_trials
    best_trial = best_trials[0]  
    print("Best hyperparameters:", best_trial.params)
