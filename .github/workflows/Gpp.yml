@@ -38,7 +38,7 @@ jobs:
           PASSWORD: ${{ secrets.MY_PASSWORD }} 
           TS: ${{ env.TS }}
           AK: ${{ secrets.GEMINI_API }}
-          RE: ${{ secrets.R_EMAIL }}
+          RE: ${{ secrets.RE_EMAIL }}
           SE: ${{ secrets.S_EMAIL }}
         run: 
           python new_stock_pred.py
