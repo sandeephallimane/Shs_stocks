@@ -257,7 +257,7 @@ def generate_pdf(html_content,footer_html):
             'footer-html': footer_html,  # Path to footer HTML file
         }
         
-       pdfkit.from_string(html_content, 'Arima_forecast_summary.pdf', options=options)
+       #pdfkit.from_string(html_content, 'Arima_forecast_summary.pdf', options=options)
        # print("PDF created successfully: Arima_forecast_summary.pdf")
     except Exception as e:
         print(f"Error creating PDF: {e}")
