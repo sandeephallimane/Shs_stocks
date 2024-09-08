@@ -1,0 +1,44 @@
+name: GPP
+on:
+  workflow_dispatch:
+  #schedule:
+   # - cron: '45 0 * * 6'
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set environment variables
+        id: set_env_vars
+        run: |
+         if [ -f "stocks.txt" ]; then
+          echo "TS=$(cat stocks.txt)" >> $GITHUB_ENV
+         else
+          echo "File stocks.txt not found."
+          exit 1
+         fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'  
+      - name: Execute Python dependency
+        run: |
+         python -m pip uninstall -r requirements2n.txt &&
+         python -m pip cache purge &&
+         python -m pip install --upgrade pip setuptools &&
+         python -m pip install -r requirements2n.txt
+    
+      - name: Generate PDF
+        env:
+          PASSWORD: ${{ secrets.MY_PASSWORD }} 
+          TS: ${{ env.TS }}
+          AK: ${{ secrets.GEMINI_API }}
+          RE: ${{ secrets.R_EMAIL }}
+          SE: ${{ secrets.S_EMAIL }}
+        run: 
+          python new_stock_pred.py
