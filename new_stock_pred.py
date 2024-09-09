@@ -5,6 +5,7 @@ import numpy as np
 from datetime import datetime, timedelta
 from scipy.stats import kurtosis 
 import optuna
+from prophet import Prophet
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 import xgboost as xgb
 from sklearn.neural_network import MLPRegressor
@@ -41,12 +42,25 @@ genai.configure(api_key=ak)
 current_time_ist = (datetime.now() + timedelta(hours=5, minutes=30, seconds=0)).strftime("%Y-%m-%d %H:%M:%S") 
 current_date = datetime.now().date()
 five_years_ago = current_date - timedelta(days=5 * 365)
-ms= 'Stock Forecast Results:'+current_time_ist
+ms= 'Stock Forecast Results: '+current_time_ist
 start_date = five_years_ago.strftime('%Y-%m-%d')
 end_date = current_date.strftime('%Y-%m-%d')
 
 model = genai.GenerativeModel("models/gemini-1.0-pro")  
 
+def calculate_pht(df,cmp):
+  df = df.reset_index()
+  df.rename(columns={'Date': 'ds', 'Adj Close': 'y'}, inplace=True)
+  model = Prophet()
+  model.fit(df)
+  future = model.make_future_dataframe(periods=120, freq='B') 
+  forecast = model.predict(future)
+  minv = np.min(forecast[['yhat']].tail(120) ).round(2)
+  maxv = np.max(forecast[['yhat']].tail(120) ).round(2)
+  avgv = np.mean(forecast[['yhat']].tail(120) ).round(2)
+  avgr = ((avgv-cmp)*100/cmp).round(2)
+  return ["Prophet Model", minv,maxv,avgv,avgr]
+    
 def calculate_ema(values, window):
     return values.ewm(span=window, adjust=False).mean()
 current_date = datetime.now().date()
@@ -299,6 +313,7 @@ def forecast_stock_returns(ticker_symbol):
             stock_data = stock_data[(z_scores < 3)]  
             z_scores1 = np.abs(stock_data['Diff'] - stock_data['Diff'].mean()) / stock_data['Diff'].std()
             stock_data = stock_data[(z_scores1 < 3)]
+            res_p01= calculate_pht(stock_data['Adj Close'],current_cmp)
             series = stock_data['Returns']
             series1 = stock_data['Diff']
             model11 = auto_arima(series, seasonal=False, trace=False,start_P=0,start_D=0,start_Q=0,max_P=5,max_D=5,max_Q=5)
@@ -319,14 +334,14 @@ def forecast_stock_returns(ticker_symbol):
             res_p21= ["Price Diff-Non Seasonal",np.average(res21).round(2),np.max(res21).round(2),np.min(res21).round(2),(((np.average(res21)-current_cmp)/current_cmp)*100).round(2)]
             res22 = [current_cmp]+ [current_cmp + sum(forecast22[:i+1]) for i in range(len(forecast22))]
             res_p22=["Price Diff Seasonal",np.average(res22).round(2),np.max(res22).round(2),np.min(res22).round(2),(((np.average(res22)-current_cmp)/current_cmp)*100).round(2)]
-            if res_p11[4]>5 and res_p21[4]>5:
+            if res_p01[4]>5 and res_p11[4]>3 and res_p21[4]>3:
                print("matching ") 
                res_p44= ht(stock_data['Adj Close'], stock_data['Diff'], stock_data['Returns'],current_cmp)
                if res_p44[4]> 5:  
                  a= fndmntl(ticker_symbol) 
                  query = "Read and summarize financial position/n"+ (((a.balance_sheet).iloc[:, :2]).dropna()).to_string() + "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()+ "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()
                  j=model.generate_content(query)
-                 k= [ticker_symbol,v,[res_p11,res_p12,res_p21,res_p22,res_p44],j.text,TI]
+                 k= [ticker_symbol,v,[res_p01,res_p11,res_p12,res_p21,res_p22,res_p44],j.text,TI]
                  return k
                else:
                  return "NA"
@@ -426,7 +441,7 @@ email_body = """
   </style>
 </head>
 <body>
-<h1 style="text-align:center;color: #440000;"> <u> Weekly Arima Forecast Summary </u></h1>
+<h1 style="text-align:center;color: #440000;"> <u> Weekly Forecast Summary NSE stocks using Prophet, ARIMA and NeuralNetwork/XGB/RandomForest/GradientBoosting </u></h1>
    <table><tr>
     <th rowspan="2">Stock Name </th>
     <th rowspan="2">Details</th>
@@ -448,8 +463,9 @@ email_body += """
 </table><p style="color: purple;">
  <strong> Please Note:</strong> Above stocks are filtered based on below criteria
   <ul>
- <li>Historical avg yearly returns > 12% </li> <li>CMP> Rs.50 </li> <li>Kurtosis lies between 2-4 </li>
- <li>Forecasted avg price based on both return and price difference forecast for next 6 month > 5% </li>
+ <li>Historical avg yearly returns > 12% </li> <li>CMP> Rs.20 </li> 
+ <li> Stocks with good fundamentals data </li>
+ <li>Forecasted avg price based on both return and price difference forecast for next 6 month > 3% </li><li> Average returns as per prophet model for next 6 month > 5%</li>
 </ui></p>
 <p><strong style="color:Tomato;"> Please See:</strong> Summary column tried to capture financial strength of the company with the help of Gemini AI. It may not give accurate picture.Please do the Fundamental analysis manually.</p>
 </h2><br>
@@ -463,7 +479,7 @@ email_body += f"""
        </html>"""
 
 #generate_pdf(email_body,footer_html)
-pdfkit.from_string(email_body, 'Arima_forecast_summary.pdf')
+pdfkit.from_string(email_body, ms)
 #output_pdf = "Arima_forecast_summary.pdf"
 #HTML(string=email_body).write_pdf(output_pdf)
 
