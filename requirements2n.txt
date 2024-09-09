@@ -13,3 +13,4 @@ google-generativeai
 WeasyPrint
 optuna
 xgboost
+prophet 
