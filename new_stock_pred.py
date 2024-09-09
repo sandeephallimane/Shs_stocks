@@ -314,39 +314,42 @@ def forecast_stock_returns(ticker_symbol):
             z_scores1 = np.abs(stock_data['Diff'] - stock_data['Diff'].mean()) / stock_data['Diff'].std()
             stock_data = stock_data[(z_scores1 < 3)]
             res_p01= calculate_pht(stock_data['Adj Close'],current_cmp)
-            series = stock_data['Returns']
-            series1 = stock_data['Diff']
-            model11 = auto_arima(series, seasonal=False, trace=False,start_P=0,start_D=0,start_Q=0,max_P=5,max_D=5,max_Q=5)
-            model12 = auto_arima(series, seasonal=True, trace=False,start_P=0,start_D=0,start_Q=0,max_P=5,max_D=5,max_Q=5)
-            model21 = auto_arima(series1, seasonal=False, trace=False,start_P=0,start_D=0,start_Q=0,max_P=5,max_D=5,max_Q=5)
-            model22 = auto_arima(series1, seasonal=True, trace=False,start_P=0,start_D=0,start_Q=0,max_P=5,max_D=5,max_Q=5)
-            forecast_periods = 120
-            forecast11 = model11.predict(n_periods=forecast_periods)
-            forecast12 = model12.predict(n_periods=forecast_periods)
-            forecast21 = model21.predict(n_periods=forecast_periods)
-            forecast22 = model22.predict(n_periods=forecast_periods)
-            v= [yearly_returns,current_cmp,stock_data_52_high,stock_data_52_low,rsi]
-            res11= [current_cmp * np.cumprod(1 + np.array(forecast11[:i+1]))[-1] for i in range(len(forecast11))]
-            res_p11= ["Return-Non Seasonal",np.average(res11).round(2),np.max(res11).round(2),np.min(res11).round(2),(((np.average(res11)-current_cmp)*100)/current_cmp).round(2)]
-            res12= [current_cmp * np.cumprod(1 + np.array(forecast12[:i+1]))[-1] for i in range(len(forecast12))]
-            res_p12= ["Return-Seasonal", np.average(res12).round(2),np.max(res12).round(2),np.min(res12).round(2),(((np.average(res12)-current_cmp)*100)/current_cmp).round(2)]
-            res21 = [current_cmp]+ [current_cmp + sum(forecast21[:i+1]) for i in range(len(forecast21))]
-            res_p21= ["Price Diff-Non Seasonal",np.average(res21).round(2),np.max(res21).round(2),np.min(res21).round(2),(((np.average(res21)-current_cmp)/current_cmp)*100).round(2)]
-            res22 = [current_cmp]+ [current_cmp + sum(forecast22[:i+1]) for i in range(len(forecast22))]
-            res_p22=["Price Diff Seasonal",np.average(res22).round(2),np.max(res22).round(2),np.min(res22).round(2),(((np.average(res22)-current_cmp)/current_cmp)*100).round(2)]
-            if res_p01[4]>5 and res_p11[4]>3 and res_p21[4]>3:
-               print("matching ") 
-               res_p44= ht(stock_data['Adj Close'], stock_data['Diff'], stock_data['Returns'],current_cmp)
-               if res_p44[4]> 5:  
-                 a= fndmntl(ticker_symbol) 
-                 query = "Read and summarize financial position/n"+ (((a.balance_sheet).iloc[:, :2]).dropna()).to_string() + "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()+ "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()
-                 j=model.generate_content(query)
-                 k= [ticker_symbol,v,[res_p01,res_p11,res_p12,res_p21,res_p22,res_p44],j.text,TI]
-                 return k
-               else:
-                 return "NA"
+            if res_p01[4]>5: 
+              series = stock_data['Returns']
+              series1 = stock_data['Diff']
+              model11 = auto_arima(series, seasonal=False, trace=False,start_P=0,start_D=0,start_Q=0,max_P=5,max_D=5,max_Q=5)
+              model12 = auto_arima(series, seasonal=True, trace=False,start_P=0,start_D=0,start_Q=0,max_P=5,max_D=5,max_Q=5)
+              model21 = auto_arima(series1, seasonal=False, trace=False,start_P=0,start_D=0,start_Q=0,max_P=5,max_D=5,max_Q=5)
+              model22 = auto_arima(series1, seasonal=True, trace=False,start_P=0,start_D=0,start_Q=0,max_P=5,max_D=5,max_Q=5)
+              forecast_periods = 120
+              forecast11 = model11.predict(n_periods=forecast_periods)
+              forecast12 = model12.predict(n_periods=forecast_periods)
+              forecast21 = model21.predict(n_periods=forecast_periods)
+              forecast22 = model22.predict(n_periods=forecast_periods)
+              v= [yearly_returns,current_cmp,stock_data_52_high,stock_data_52_low,rsi]
+              res11= [current_cmp * np.cumprod(1 + np.array(forecast11[:i+1]))[-1] for i in range(len(forecast11))]
+              res_p11= ["Return-Non Seasonal",np.average(res11).round(2),np.max(res11).round(2),np.min(res11).round(2),(((np.average(res11)-current_cmp)*100)/current_cmp).round(2)]
+              res12= [current_cmp * np.cumprod(1 + np.array(forecast12[:i+1]))[-1] for i in range(len(forecast12))]
+              res_p12= ["Return-Seasonal", np.average(res12).round(2),np.max(res12).round(2),np.min(res12).round(2),(((np.average(res12)-current_cmp)*100)/current_cmp).round(2)]
+              res21 = [current_cmp]+ [current_cmp + sum(forecast21[:i+1]) for i in range(len(forecast21))]
+              res_p21= ["Price Diff-Non Seasonal",np.average(res21).round(2),np.max(res21).round(2),np.min(res21).round(2),(((np.average(res21)-current_cmp)/current_cmp)*100).round(2)]
+              res22 = [current_cmp]+ [current_cmp + sum(forecast22[:i+1]) for i in range(len(forecast22))]
+              res_p22=["Price Diff Seasonal",np.average(res22).round(2),np.max(res22).round(2),np.min(res22).round(2),(((np.average(res22)-current_cmp)/current_cmp)*100).round(2)]
+              if res_p11[4]>3 and res_p21[4]>3:
+                print("matching ") 
+                res_p44= ht(stock_data['Adj Close'], stock_data['Diff'], stock_data['Returns'],current_cmp)
+                if res_p44[4]> 5:  
+                  a= fndmntl(ticker_symbol) 
+                  query = "Read and summarize financial position/n"+ (((a.balance_sheet).iloc[:, :2]).dropna()).to_string() + "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()+ "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()
+                  j=model.generate_content(query)
+                  k= [ticker_symbol,v,[res_p01,res_p11,res_p12,res_p21,res_p22,res_p44],j.text,TI]
+                  return k
+                else:
+                  return "NA"
+              else:
+                  return "NA"      
             else:
-              return "NA"
+              return "NA"  
         else:
             return "NA"
       else:
