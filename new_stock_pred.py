@@ -22,6 +22,9 @@ import pdfkit
 import os
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import google.generativeai as genai
+import logging
+
+logging.basicConfig(level=logging.ERROR)
 
 ticker_symbols=(os.getenv('TS')).split(',')
 print(ticker_symbols)
