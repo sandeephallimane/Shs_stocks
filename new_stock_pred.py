@@ -43,6 +43,7 @@ current_time_ist = (datetime.now() + timedelta(hours=5, minutes=30, seconds=0)).
 current_date = datetime.now().date()
 five_years_ago = current_date - timedelta(days=5 * 365)
 ms= 'Stock Forecast Results: '+current_time_ist
+msp= ms+'.pdf'
 start_date = five_years_ago.strftime('%Y-%m-%d')
 end_date = current_date.strftime('%Y-%m-%d')
 
@@ -482,7 +483,7 @@ email_body += f"""
        </html>"""
 
 #generate_pdf(email_body,footer_html)
-pdfkit.from_string(email_body, ms)
+pdfkit.from_string(email_body, msp)
 #output_pdf = "Arima_forecast_summary.pdf"
 #HTML(string=email_body).write_pdf(output_pdf)
 
@@ -531,7 +532,7 @@ e_body = """
 receiver_emails = re
 
 # Path to the PDF file you want to attach
-pdf_attachment_path ='Arima_forecast_summary.pdf'
+pdf_attachment_path = msp
 
 # Send email with HTML content and PDF attachment
 send_email(ms, e_body, receiver_emails, attachment_path=pdf_attachment_path)
