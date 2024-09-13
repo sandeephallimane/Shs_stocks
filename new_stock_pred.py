@@ -346,7 +346,7 @@ def forecast_stock_returns(ticker_symbol):
               res_p21= ["Price Diff-Non Seasonal",np.average(res21).round(2),np.max(res21).round(2),np.min(res21).round(2),(((np.average(res21)-current_cmp)/current_cmp)*100).round(2)]
               res22 = [current_cmp]+ [current_cmp + sum(forecast22[:i+1]) for i in range(len(forecast22))]
               res_p22=["Price Diff Seasonal",np.average(res22).round(2),np.max(res22).round(2),np.min(res22).round(2),(((np.average(res22)-current_cmp)/current_cmp)*100).round(2)]
-              if res_p11[4]>3 and res_p21[4]>3:
+              if res_p11[4]>5 and res_p21[4]>5:
                 print("matching ") 
                 res_p44= ht(stock_data['Adj Close'], stock_data['Diff'], stock_data['Returns'],current_cmp)
                 if res_p44[4]> 5:  
