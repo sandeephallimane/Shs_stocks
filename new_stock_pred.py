@@ -290,10 +290,13 @@ def fndmntl(ticker):
 def forecast_stock_returns(ticker_symbol):
     print(ticker_symbol)
     try:
-      stock_data = yf.download(ticker_symbol, start=start_date, end=end_date)
-      stock_data.dropna(inplace=True)
+      sck = yf.Ticker(ticker_symbol)
+      stock_data = (sck.history(period='max')).dropna(inplace=True)
+      if len(stock_data) > 1200:
+        stock_data = stock_data.tail(1200)
+      else:
+        pass
       if len(stock_data)>500:
-        # Calculate daily returns
         stock_data['Returns'] =  np.log(stock_data['Adj Close'] / stock_data['Adj Close'].shift(1))
         stock_data['Diff'] =  stock_data['Adj Close'].diff()
         stock_data.dropna(inplace=True)
