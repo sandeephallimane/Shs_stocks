@@ -63,7 +63,7 @@ def calculate_pht(df,cmp):
   maxv = np.max(forecast[['yhat']].tail(120) ).round(2)
   avgv = np.mean(forecast[['yhat']].tail(120) ).round(2)
   avgr = ((avgv-cmp)*100/cmp).round(2)
-  return ["Prophet Model", minv,maxv,avgv,avgr]
+  return ["Prophet Model", avgv,maxv,minv,avgr]
     
 def calculate_ema(values, window):
     return values.ewm(span=window, adjust=False).mean()
@@ -266,7 +266,7 @@ def ht(cp,prd,log_returns,cmp):
    mnr = ((mnf-cmp)*100/cmp).round(2)
    mxr = ((mxf-cmp)*100/cmp).round(2)
    avr = ((avf-cmp)*100/cmp).round(2)
-   return [ru, mnf,mxf, avf,avr]
+   return [ru, avf,mxf,mnf, avr]
 
 def generate_pdf(html_content,footer_html):
     try:
