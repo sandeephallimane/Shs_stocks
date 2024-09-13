@@ -294,7 +294,7 @@ def fndmntl(ticker):
 def forecast_stock_returns(ticker_symbol):
     print(ticker_symbol)
     try:
-      stock_data = yf.download(ticker_symbol, period='max').dropna(inplace=True)
+      stock_data = yf.download(ticker_symbol, period='max').dropna()
       if len(stock_data) > 1200:
         stock_data = stock_data.tail(1200)
       else:
