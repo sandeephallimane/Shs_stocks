@@ -170,8 +170,8 @@ def objective(trial,X_cp,y_cp,X_pd,y_pd,X_re,y_re,X_train_cp, X_test_cp, y_train
       )
 
     elif model_type == 'NeuralNetwork':
-      hidden_layer_sizes = trial.suggest_categorical('hidden_layer_sizes', [(50,), (100,), (200,)])
-      activation = trial.suggest_categorical('activation', ['relu', 'tanh'])
+      hidden_layer_sizes =[(50,), (100,), (200,)][trial.suggest_int('hidden_layer_sizes', 0,2)]
+      activation =  ['relu', 'tanh'] [trial.suggest_int('activation',0,1)]
       alpha = trial.suggest_float('alpha', 0.0001, 0.1)
       model = MLPRegressor(
         hidden_layer_sizes=hidden_layer_sizes,
@@ -242,7 +242,11 @@ def ht(cp,prd,log_returns,cmp):
    elif best_trial.params['model_type'] == 3:
      ru= "NeuralNetwork model"
      del params['model_type']
-     best_model = MLPRegressor(**params)
+     best_model = MLPRegressor(
+        hidden_layer_sizes=[(50,), (100,), (200,)][params['hidden_layer_sizes']],
+        activation=['relu', 'tanh'][params['activation']],
+        alpha=params['alpha']
+     )
 
    best_model.fit(X, y)
    yr = cmp
