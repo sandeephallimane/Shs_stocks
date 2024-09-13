@@ -1,8 +1,8 @@
 name: GPP
 on:
-  workflow_dispatch:
-  #schedule:
-   # - cron: '45 0 * * 6'
+  #workflow_dispatch:
+  schedule:
+    - cron: '25 0 * * 6'
 
 jobs:
   build:
