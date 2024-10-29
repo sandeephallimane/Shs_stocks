@@ -294,7 +294,8 @@ def fndmntl(ticker):
 def forecast_stock_returns(ticker_symbol):
     print(ticker_symbol)
     try:
-      stock_data = yf.download(ticker_symbol, period='max').dropna()
+      a = yf.Ticker(ticker_symbol)
+      stock_data = (a.history(period="max")).dropna()
       if len(stock_data) > 1200:
         stock_data = stock_data.tail(1200)
       else:
@@ -349,7 +350,6 @@ def forecast_stock_returns(ticker_symbol):
                 print("matching ") 
                 res_p44= ht(stock_data['Adj Close'], stock_data['Diff'], stock_data['Returns'],current_cmp)
                 if res_p44[4]> 5:  
-                  a= fndmntl(ticker_symbol) 
                   query = "Read and summarize financial position/n"+ (((a.balance_sheet).iloc[:, :2]).dropna()).to_string() + "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()+ "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()
                   j=model.generate_content(query)
                   k= [ticker_symbol,v,[res_p01,res_p11,res_p12,res_p21,res_p22,res_p44],j.text,TI]
