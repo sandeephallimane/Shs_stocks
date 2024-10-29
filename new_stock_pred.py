@@ -54,7 +54,7 @@ model = genai.GenerativeModel("models/gemini-1.0-pro")
 
 def calculate_pht(df,cmp):
   df = df.reset_index()
-  df.rename(columns={'Date': 'ds', 'Adj Close': 'y'}, inplace=True)
+  df.rename(columns={'Date': 'ds', 'Close': 'y'}, inplace=True)
   model = Prophet()
   model.fit(df)
   future = model.make_future_dataframe(periods=120, freq='B') 
@@ -301,18 +301,18 @@ def forecast_stock_returns(ticker_symbol):
       else:
         pass
       if len(stock_data)>500:
-        stock_data['Returns'] =  np.log(stock_data['Adj Close'] / stock_data['Adj Close'].shift(1))
-        stock_data['Diff'] =  stock_data['Adj Close'].diff()
+        stock_data['Returns'] =  np.log(stock_data['Close'] / stock_data['Adj Close'].shift(1))
+        stock_data['Diff'] =  stock_data['Close'].diff()
         stock_data.dropna(inplace=True)
-        stock_data['52 Week High'] = stock_data['Adj Close'].rolling(window=252).max()
-        stock_data['52 Week Low'] = stock_data['Adj Close'].rolling(window=252).min()
+        stock_data['52 Week High'] = stock_data['Close'].rolling(window=252).max()
+        stock_data['52 Week Low'] = stock_data['Close'].rolling(window=252).min()
         last_date = stock_data.index[-1].date()
         stock_data_52_high = stock_data['52 Week High'].iloc[-1].round(2)
         stock_data_52_low = stock_data['52 Week Low'].iloc[-1].round(2)
         cv = stock_data['Returns'].std() / stock_data['Returns'].mean()
         kurtosis_val =kurtosis(stock_data['Returns'])
-        rsi = calculate_rsi(stock_data['Adj Close'].tail(252), window=14) 
-        current_cmp = stock_data['Adj Close'].iloc[-1].round(2)
+        rsi = calculate_rsi(stock_data['Close'].tail(252), window=14) 
+        current_cmp = stock_data['Close'].iloc[-1].round(2)
         yearly_returns = (pd.Series.mean(stock_data['Returns']) * 25000).round(2)
         TI=[]
         TI.append('Buy' if 45 > (calculate_rsi(stock_data['Close'].tail(700))) > 30 else 'Sell')
