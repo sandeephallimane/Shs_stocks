@@ -1,6 +1,6 @@
 name: GPP
 on:
-  #workflow_dispatch:
+  workflow_dispatch: 
   schedule:
     - cron: '25 0 * * 6'
 
