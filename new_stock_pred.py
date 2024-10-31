@@ -301,7 +301,7 @@ def forecast_stock_returns(ticker_symbol):
       else:
         pass
       if len(stock_data)>500:
-        stock_data['Returns'] =  np.log(stock_data['Close'] / stock_data['Adj Close'].shift(1))
+        stock_data['Returns'] =  np.log(stock_data['Close'] / stock_data['Close'].shift(1))
         stock_data['Diff'] =  stock_data['Close'].diff()
         stock_data.dropna(inplace=True)
         stock_data['52 Week High'] = stock_data['Close'].rolling(window=252).max()
@@ -324,7 +324,7 @@ def forecast_stock_returns(ticker_symbol):
             stock_data = stock_data[(z_scores < 3)]  
             z_scores1 = np.abs(stock_data['Diff'] - stock_data['Diff'].mean()) / stock_data['Diff'].std()
             stock_data = stock_data[(z_scores1 < 3)]
-            res_p01= calculate_pht(stock_data['Adj Close'],current_cmp)
+            res_p01= calculate_pht(stock_data['Close'],current_cmp)
             if res_p01[4]>5: 
               series = stock_data['Returns']
               series1 = stock_data['Diff']
@@ -348,7 +348,7 @@ def forecast_stock_returns(ticker_symbol):
               res_p22=["Price Diff Seasonal",np.average(res22).round(2),np.max(res22).round(2),np.min(res22).round(2),(((np.average(res22)-current_cmp)/current_cmp)*100).round(2)]
               if res_p11[4]>5 and res_p21[4]>5:
                 print("matching ") 
-                res_p44= ht(stock_data['Adj Close'], stock_data['Diff'], stock_data['Returns'],current_cmp)
+                res_p44= ht(stock_data['Close'], stock_data['Diff'], stock_data['Returns'],current_cmp)
                 if res_p44[4]> 5:  
                   query = "Read and summarize financial position/n"+ (((a.balance_sheet).iloc[:, :2]).dropna()).to_string() + "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()+ "and "+(((a.financials).iloc[:, :2]).dropna()).to_string()
                   j=model.generate_content(query)
@@ -470,10 +470,11 @@ email_body = """
     <th>Avg Ret%</th>
   </tr>
 """
-for r in forecasts:    
-   email_body += generate_nested_html(r)
-email_body += """
-</table><p style="color: purple;">
+if len(forecasts)> 0:
+  for r in forecasts:  
+    email_body += generate_nested_html(r)
+  email_body += """
+   </table><p style="color: purple;">
  <strong> Please Note:</strong> Above stocks are filtered based on below criteria
   <ul>
  <li>Historical avg yearly returns > 12% </li> <li>CMP> Rs.20 </li> 
@@ -483,7 +484,7 @@ email_body += """
 <p><strong style="color:Tomato;"> Please See:</strong> Summary column tried to capture financial strength of the company with the help of Gemini AI. It may not give accurate picture.Please do the Fundamental analysis manually.</p>
 </h2><br>
 """
-email_body += f"""
+  email_body += f"""
       <p style="text-align:right;"><strong>Last updated on:</strong>{current_time_ist}</p>
       <div class="footer">
          <span class="page"></span></div>
@@ -492,7 +493,7 @@ email_body += f"""
        </html>"""
 
 #generate_pdf(email_body,footer_html)
-pdfkit.from_string(email_body, msp)
+  pdfkit.from_string(email_body, msp)
 #output_pdf = "Arima_forecast_summary.pdf"
 #HTML(string=email_body).write_pdf(output_pdf)
 
@@ -507,7 +508,7 @@ def send_email(subject, html_content, receiver_emails, attachment_path=None):
     msg['From'] = sender_email
     msg['To'] = ', '.join(receiver_emails)
     msg['Subject'] = subject
-
+    
     # Attach HTML content
     msg.attach(MIMEText(html_content, 'html'))
 
@@ -534,14 +535,26 @@ def send_email(subject, html_content, receiver_emails, attachment_path=None):
 e_body = """
 <html>
 <body>
-  <h2>Hi All,<br>
-  Stocks with their forecasted returns for the next 6 months </h2>
+  <h3>Greetings,<br>
+  Stocks with their forecasted returns for the next 6 months </h3>
   </body></html>
 """
+
+e_body1 = """
+<html>
+<body>
+  <h2>Greetings,<br>
+  No stock suggestion for this week</h2>
+  </body></html>
+"""
+
 receiver_emails = re
 
 # Path to the PDF file you want to attach
 pdf_attachment_path = msp
 
 # Send email with HTML content and PDF attachment
-send_email(ms, e_body, receiver_emails, attachment_path=pdf_attachment_path)
+if len(forecasts)> 0:
+  send_email(ms, e_body, receiver_emails, attachment_path=pdf_attachment_path)
+else:
+  send_email(ms, e_body1, receiver_emails,attachment_path=None)  
