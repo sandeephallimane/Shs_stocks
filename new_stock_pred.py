@@ -52,18 +52,19 @@ end_date = current_date.strftime('%Y-%m-%d')
 
 model = genai.GenerativeModel("models/gemini-1.0-pro")  
 
-def calculate_pht(df,cmp):
-  df = df.reset_index()
-  df.rename(columns={'Date': 'ds', 'Close': 'y'}, inplace=True)
-  model = Prophet()
-  model.fit(df)
-  future = model.make_future_dataframe(periods=120, freq='B') 
-  forecast = model.predict(future)
-  minv = np.min(forecast[['yhat']].tail(120) ).round(2)
-  maxv = np.max(forecast[['yhat']].tail(120) ).round(2)
-  avgv = np.mean(forecast[['yhat']].tail(120) ).round(2)
-  avgr = ((avgv-cmp)*100/cmp).round(2)
-  return ["Prophet Model", avgv,maxv,minv,avgr]
+def calculate_pht(df, cmp):
+    df = df.reset_index()
+    df['Date'] = df['Date'].dt.tz_localize(None)
+    df.rename(columns={'Date': 'ds', 'Close': 'y'}, inplace=True)
+    model = Prophet()
+    model.fit(df)   
+    future = model.make_future_dataframe(periods=120, freq='B')
+    forecast = model.predict(future)
+    minv = round(np.min(forecast['yhat'].tail(120)), 2)
+    maxv = round(np.max(forecast['yhat'].tail(120)), 2)
+    avgv = round(np.mean(forecast['yhat'].tail(120)), 2)    
+    avgr = ((avgv - cmp) * 100 / cmp).round(2)
+    return ["Prophet Model", avgv, maxv, minv, avgr]
     
 def calculate_ema(values, window):
     return values.ewm(span=window, adjust=False).mean()
@@ -324,7 +325,7 @@ def forecast_stock_returns(ticker_symbol):
             stock_data = stock_data[(z_scores < 3)]  
             z_scores1 = np.abs(stock_data['Diff'] - stock_data['Diff'].mean()) / stock_data['Diff'].std()
             stock_data = stock_data[(z_scores1 < 3)]
-            res_p01= calculate_pht(stock_data['Close'],current_cmp)
+            res_p01= calculate_pht(stock_data,current_cmp)
             if res_p01[4]>5: 
               series = stock_data['Returns']
               series1 = stock_data['Diff']
