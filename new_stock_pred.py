@@ -45,8 +45,8 @@ genai.configure(api_key=ak)
 current_time_ist = (datetime.now() + timedelta(hours=5, minutes=30, seconds=0)).strftime("%Y-%m-%d %H:%M:%S") 
 current_date = datetime.now().date()
 five_years_ago = current_date - timedelta(days=5 * 365)
-ms= 'Stock Forecast Results: '+current_time_ist
-msp= ms+'.pdf'
+ms= '📈 ₹💰🇮🇳 Stock Forecast Results: '+current_time_ist
+msp= 'Stock Forecast Report: '+current_time_ist+'.pdf'
 start_date = five_years_ago.strftime('%Y-%m-%d')
 end_date = current_date.strftime('%Y-%m-%d')
 
