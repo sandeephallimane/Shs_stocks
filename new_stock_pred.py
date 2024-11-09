@@ -455,7 +455,7 @@ email_body = """
   </style>
 </head>
 <body>
-<h1 style="text-align:center;color: #440000;"> <u> Weekly Forecast Summary India 🇮🇳 stocks using Prophet, ARIMA and NeuralNetwork/XGB/RandomForest/GradientBoosting </u></h1>
+<h1 style="text-align:center;color: #440000;"> <u> Weekly Forecast Summary Indian stocks using Prophet, ARIMA and NeuralNetwork/XGB/RandomForest/GradientBoosting </u></h1>
    <table><tr>
     <th rowspan="2">Stock Name </th>
     <th rowspan="2">Details</th>
