@@ -8,7 +8,6 @@ datetime
 scipy
 Jinja2
 pdfkit
-wkhtmltopdf
 google-generativeai
 WeasyPrint
 optuna
