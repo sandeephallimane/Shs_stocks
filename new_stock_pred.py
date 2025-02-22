@@ -17,8 +17,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 import smtplib
 from jinja2 import Environment, FileSystemLoader
-import pdfkit
-#from weasyprint import HTML, CSS
+from weasyprint import HTML, CSS
 import os
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import google.generativeai as genai
@@ -494,9 +493,9 @@ if len(forecasts)> 0:
        </html>"""
 
 #generate_pdf(email_body,footer_html)
-  pdfkit.from_string(email_body, msp)
+  #pdfkit.from_string(email_body, msp)
 #output_pdf = "Arima_forecast_summary.pdf"
-#HTML(string=email_body).write_pdf(output_pdf)
+HTML(string=email_body).write_pdf(msp)
 
 def send_email(subject, html_content, receiver_emails, attachment_path=None):
     smtp_server = 'smtp.gmail.com'
