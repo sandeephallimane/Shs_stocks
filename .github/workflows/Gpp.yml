@@ -31,7 +31,6 @@ jobs:
           python -m pip uninstall -r requirements2n.txt &&
           python -m pip cache purge &&
           python -m pip install --upgrade pip setuptools &&
-          brew install cairo pango gdk-pixbuf gobject-introspection libffi fontconfig gtk+ libomp gcc &&
           python -m pip install -r requirements2n.txt
     
       - name: Generate PDF
@@ -41,5 +40,7 @@ jobs:
           AK: ${{ secrets.GEMINI_API }}
           RE: ${{ secrets.R_EML }}
           SE: ${{ secrets.S_EMAIL }}
+          MGD: ${{ secrets.MGD }}
+          MGA: ${{ secrets.MGA }}
         run: 
           python new_stock_pred.py
