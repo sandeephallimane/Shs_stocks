@@ -10,15 +10,16 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 import xgboost as xgb
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
-import smtplib
+#import smtplib
+#from email.mime.multipart import MIMEMultipart
+#from email.mime.text import MIMEText
+#from email.mime.base import MIMEBase
+#from email import encoders
+#import smtplib
 from jinja2 import Environment, FileSystemLoader
 #from weasyprint import HTML, CSS
 import os
+import requests
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import google.generativeai as genai
 import logging
