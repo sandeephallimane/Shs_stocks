@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 #from email import encoders
 #import smtplib
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML, CSS
+#from weasyprint import HTML, CSS
 import os
 import requests
 from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
@@ -500,17 +500,8 @@ if len(forecasts)> 0:
 #generate_pdf(email_body,footer_html)
   #pdfkit.from_string(email_body, msp)
 #output_pdf = "Arima_forecast_summary.pdf"
-HTML(string=email_body).write_pdf(msp)
+#HTML(string=email_body).write_pdf(msp)
 
 file_path = msp
-with open(file_path, "rb") as file:
-    file_content = base64.b64encode(file.read()).decode("utf-8")
-
-data = {
-    "file": file_content,
-    "filename": msp,
-    "mimetype": "application/pdf"
-}
-
-response = requests.post(GAS_URL, data=data)
-print(response.text)  # Check response from GAS
+response = requests.post(GAS_URL, data={"html": email_body})
+print(response.text)
