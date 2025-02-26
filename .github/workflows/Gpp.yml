@@ -43,5 +43,6 @@ jobs:
           SE: ${{ secrets.S_EMAIL }}
           MGD: ${{ secrets.MGD }}
           MGA: ${{ secrets.MGA }}
+          GAS: ${{ secrets.GAS }}
         run: 
           python new_stock_pred.py
