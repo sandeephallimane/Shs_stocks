@@ -24,8 +24,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
 import google.generativeai as genai
 import logging
 import base64
-
-logging.basicConfig(level=logging.ERROR)
+logging.getLogger().setLevel(logging.ERROR)
 
 ticker_symbols=(os.getenv('TS')).split(',')
 print(ticker_symbols)
