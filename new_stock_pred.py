@@ -501,7 +501,7 @@ if len(forecasts)> 0:
   #pdfkit.from_string(email_body, msp)
 #output_pdf = "Arima_forecast_summary.pdf"
 #HTML(string=email_body).write_pdf(msp)
-
-file_path = msp
-response = requests.post(GAS_URL, data={"html": email_body})
-print(response.text)
+  print(email_body)
+  file_path = msp
+  response = requests.post(GAS_URL, data={"html": email_body})
+  print(response.text)
