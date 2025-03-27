@@ -55,6 +55,7 @@ end_date = current_date.strftime('%Y-%m-%d')
 
 model = genai.GenerativeModel("models/gemini-1.0-pro")  
 
+
 def calculate_pht(df, cmp):
     df = df.reset_index()
     df['Date'] = df['Date'].dt.tz_localize(None)
@@ -494,12 +495,8 @@ if len(forecasts)> 0:
          <span class="page"></span></div>
     </div>
        </body>
-       </html>"""
+       </html>"""     
 
-#generate_pdf(email_body,footer_html)
-  #pdfkit.from_string(email_body, msp)
-#output_pdf = "Arima_forecast_summary.pdf"
-#HTML(string=email_body).write_pdf(msp)
   print(email_body)
   file_path = msp
   response = requests.post(GAS_URL, data={"html": email_body})
