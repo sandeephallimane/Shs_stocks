@@ -53,8 +53,7 @@ msp= 'Stock Forecast Report: '+current_time_ist+'.pdf'
 start_date = five_years_ago.strftime('%Y-%m-%d')
 end_date = current_date.strftime('%Y-%m-%d')
 
-model = genai.GenerativeModel("models/gemini-1.0-pro")  
-
+model = genai.GenerativeModel("models/gemini-2.0-flash")  
 
 def calculate_pht(df, cmp):
     df = df.reset_index()
