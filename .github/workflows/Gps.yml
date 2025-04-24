@@ -2,7 +2,7 @@ name: GPS
 on:
   workflow_dispatch: 
   schedule:
-    - cron: '25 0 * * 6'
+    - cron: '25 1 * * *'
 
 jobs:
   build:
