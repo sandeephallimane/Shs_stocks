@@ -18,10 +18,10 @@ jobs:
           python-version: '3.9'  
       - name: Execute Python dependency
         run: |
-          python -m pip uninstall -r requirement23.txt &&
+          python -m pip uninstall -r req23.txt &&
           python -m pip cache purge &&
           python -m pip install --upgrade pip setuptools &&
-          python -m pip install -r requirement23.txt
+          python -m pip install -r req23.txt
     
       - name: Generate PDF
         env:
