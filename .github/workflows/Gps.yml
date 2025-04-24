@@ -26,5 +26,6 @@ jobs:
       - name: Generate PDF
         env:
           AK: ${{ secrets.GEMINI_API }}
+          GAS: ${{ secrets.GAS }}
         run: 
           python Beta_d_n.py
