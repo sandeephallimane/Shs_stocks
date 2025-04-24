@@ -2,11 +2,11 @@ from datetime import datetime
 import google.generativeai as genai
 import os
 import re
-
+import requests
 today_date = datetime.now().strftime("%B %d, %Y")
 ak= os.getenv('AK')
 genai.configure(api_key=ak)
-
+GAS_URL = os.getenv('GAS')
 model = genai.GenerativeModel("models/gemini-2.0-flash")
 
 prompt =  f"""
@@ -69,3 +69,5 @@ def generate_html_from_output(text_output):
 response = model.generate_content(prompt)
 html_output = generate_html_from_output(response.text)
 print(html_output)
+response = requests.post(GAS_URL, data={"html": html_output})
+  print(response.text)
