@@ -1,5 +1,13 @@
 import feedparser
 import os
+from datetime import datetime
+import google.generativeai as genai
+import re
+import requests
+today_date = datetime.now().strftime("%B %d, %Y")
+ak= os.getenv('AK')
+genai.configure(api_key=ak)
+GAS_URL = os.getenv('GAS')
 rss_urls = [
     "https://www.moneycontrol.com/rss/latestnews.xml",  # Moneycontrol Latest News
     "https://www.livemint.com/rss/markets.xml",  # Economic Times Latest News
@@ -54,3 +62,5 @@ entries = fetch_rss_feeds(rss_urls)
 html_output = generate_html(entries)
 
 print(html_output)
+response = requests.post(GAS_URL, data={"html": html_output})
+print(response.text)
