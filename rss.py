@@ -63,13 +63,13 @@ entries = fetch_rss_feeds(rss_urls)
 html_output = generate_html(entries)
 
 print(html_output)
-#response = requests.post(GAS_URL, data={"html": html_output})
-#print(response.text)
+response = requests.post(GAS_URL, data={"html": html_output})
+print(response.text)
 
-rss_url = "https://nsearchives.nseindia.com/content/RSS/Insider_Trading.xml"
-feed = feedparser.parse(rss_url)
+#rss_url = "https://nsearchives.nseindia.com/content/RSS/Insider_Trading.xml"
+#feed = feedparser.parse(rss_url)
 
-links = []
-for entry in feed.entries:
-    links.append(entry.link)
-print(links)
+#links = []
+#for entry in feed.entries:
+   # links.append(entry.link)
+#print(links)
