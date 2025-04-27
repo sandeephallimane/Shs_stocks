@@ -28,4 +28,4 @@ jobs:
           AK: ${{ secrets.GEMINI_API }}
           GAS: ${{ secrets.GAS }}
         run: 
-          python Beta_d_n.py
+          python rss.py
