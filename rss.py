@@ -22,12 +22,14 @@ def fetch_rss_feeds(urls):
     for url in urls:
         feed = feedparser.parse(url)
         for entry in feed.entries:
+            summary = entry.get('summary') or entry.get('description') or "No summary available"
             all_entries.append({
-                "title": entry.title,
-                "link": entry.link,
-                "summary": entry.summary,
+                "title": entry.get('title', 'No title'),
+                "link": entry.get('link', '#'),
+                "summary": summary,
             })
     return all_entries
+
 
 def generate_html(entries):
     html_content = """
