@@ -10,10 +10,11 @@ ak= os.getenv('AK')
 genai.configure(api_key=ak)
 GAS_URL = os.getenv('GAS')
 rss_urls = [ 
-    "https://www.livemint.com/rss/markets.xml",  # Economic Times Latest News
-    "https://cfo.economictimes.indiatimes.com/rss/topstories",  # NDTV Profit
-    "https://www.thehindubusinessline.com/markets/stock-markets/feeder/default.rss",  # Business Standard Markets
-    "https://www.moneycontrol.com/rss/stocksinfocus.xml",  # Moneycontrol Stocks in Focus
+    "https://www.cnbctv18.com/commonfeeds/v1/cne/rss/market.xml",
+    "https://www.cnbctv18.com/commonfeeds/v1/cne/rss/economy.xml",
+    "https://www.livemint.com/rss/markets.xml",  
+    "https://cfo.economictimes.indiatimes.com/rss/topstories",  
+    "https://www.thehindubusinessline.com/markets/stock-markets/feeder/default.rss"
 ]
 
 def fetch_rss_feeds(urls):
