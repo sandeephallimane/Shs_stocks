@@ -188,6 +188,7 @@ def generate_html(entries):
 
 
 entries = fetch_rss_feeds(rss_urls)
+print(entries)
 html_output = generate_html(entries)
 
 print(html_output)
