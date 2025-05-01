@@ -14,7 +14,7 @@ rss_urls = [
     "https://www.cnbctv18.com/commonfeeds/v1/cne/rss/economy.xml",
     "https://www.livemint.com/rss/markets.xml",  
     "https://cfo.economictimes.indiatimes.com/rss/topstories",  
-    "https://www.thehindubusinessline.com/markets/stock-markets/feeder/default.rss"
+    "https://www.thehindubusinessline.com/markets/stock-markets/feeder/default.rss",
 ]
 
 def fetch_rss_feeds(urls):
