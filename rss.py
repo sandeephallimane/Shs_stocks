@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 import google.generativeai as genai
 import re
+import htmlmin
 import requests
 from bs4 import BeautifulSoup
 today_date = datetime.now().strftime("%B %d, %Y")
@@ -70,11 +71,16 @@ def generate_html(entries):
           
 
 entries = fetch_rss_feeds(rss_urls)
-print(entries)
 html_output = generate_html(entries)
+minified_html = htmlmin.minify(
+        html_output,
+        remove_comments=True,
+        remove_empty_space=True,
+        reduce_boolean_attributes=True,
+        remove_optional_attribute_quotes=False
+    )
 
-print(html_output)
-response = requests.post(GAS_URL, data={"html": html_output})
+response = requests.post(GAS_URL, data={"html": minified_html})
 print(response.text)
 
 #rss_url = "https://nsearchives.nseindia.com/content/RSS/Insider_Trading.xml"
