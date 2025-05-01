@@ -135,53 +135,37 @@ def generate_html(entries):
                 transition: all 0.3s ease;
             }
 
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-        </style>
-    </head>
-    <body>
-        <button class="toggle-dark" onclick="toggleDarkMode()">Toggle Mode</button>
-        <div class="container">
-            <h1>Curated News from Your Favorite Sources</h1>
+def generate_html(entries):
+    html_content = """
+    <html>
+    <body style="margin:0; padding:20px; background-color:#f4f6f9; font-family: Arial, sans-serif;">
+        <table align="center" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; background-color:#ffffff; padding:20px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+            <!-- Title -->
+            <tr>
+                <td align="center" style="font-size:26px; font-weight:bold; color:#333333; padding-bottom:30px;">
+                    Curated News Just for You
+                </td>
+            </tr>
     """
 
-    for idx, entry in enumerate(entries):
+    # Loop through the entries and create each feed item
+    for entry in entries:
         html_content += f"""
-            <div class="feed-item" style="animation-delay: {idx * 0.1}s">
-                <a href="{entry['link']}" target="_blank">{entry['title']}</a>
-                <div class="toggle-button" onclick="toggleSummary('summary-{idx}')">Show Summary</div>
-                <p id="summary-{idx}">{entry['summary']}</p>
-            </div>
+            <tr>
+                <td style="padding:20px 0; border-top:1px solid #f0f0f0; border-bottom:1px solid #f0f0f0;">
+                    <a href="{entry['link']}" style="text-decoration:none; font-size:20px; color:#1a73e8; font-weight:bold; display:block; padding:10px 0; transition:color 0.3s ease;">
+                        {entry['title']}
+                    </a>
+                    <p style="margin:10px 0 20px; font-size:16px; color:#555555; line-height:1.6; font-weight:300;">
+                        {entry['summary']}
+                    </p>
+                    <a href="{entry['link']}" style="text-decoration:none; font-size:14px; color:#1a73e8; font-weight:bold; display:block; text-align:center; background-color:#e0f7fa; padding:10px 0; border-radius:5px; transition:background-color 0.3s ease;">Read More</a>
+                </td>
+            </tr>
         """
 
     html_content += """
-        </div>
-        <script>
-            function toggleSummary(id) {
-                var el = document.getElementById(id);
-                if (el.style.display === 'none' || el.style.display === '') {
-                    el.style.display = 'block';
-                } else {
-                    el.style.display = 'none';
-                }
-            }
-
-            function toggleDarkMode() {
-                document.body.classList.toggle('dark');
-            }
-
-            // Trigger fade-in animation
-            window.addEventListener('DOMContentLoaded', () => {
-                const items = document.querySelectorAll('.feed-item');
-                items.forEach((el, i) => {
-                    setTimeout(() => {
-                        el.style.opacity = 1;
-                    }, i * 100);
-                });
-            });
-        </script>
+        </table>
     </body>
     </html>
     """
