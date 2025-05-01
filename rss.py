@@ -31,8 +31,7 @@ def fetch_rss_feeds(urls):
     return all_entries
 
 
-
- def generate_html(entries):
+def generate_html(entries):
     html_content = """
     <html>
     <body style="margin:0; padding:20px; background-color:#f4f6f9; font-family: Arial, sans-serif;">
