@@ -3,3 +3,4 @@ requests
 datetime
 feedparser
 bs4
+htmlmin
