@@ -2,7 +2,7 @@ name: RSS
 on:
   workflow_dispatch: 
   schedule:
-    - cron: '25 1 * * *'
+    - cron: '0 1 * * 1-5'
 
 jobs:
   build:
