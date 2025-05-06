@@ -71,6 +71,9 @@ def generate_html(entries):
           
 
 entries = fetch_rss_feeds(rss_urls)
+query = "Read and summarize financial position/n"+entries
+j=model.generate_content(query)
+
 html_output = generate_html(entries)
 minified_html = htmlmin.minify(
         html_output,
