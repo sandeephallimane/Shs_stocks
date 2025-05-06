@@ -32,6 +32,75 @@ def fetch_rss_feeds(urls):
             })
     return all_entries
 
+def gemini_response_to_html(gemini_response: str) -> str:
+    sections = re.split(r"\n\s*\*\*(.+?)\*\*:\s*\n", gemini_response.strip())
+    
+    # Handle first part (intro, if any)
+    html_sections = []
+    intro = sections[0]
+    if intro:
+        html_sections.append(f"<p>{intro.strip()}</p>")
+    
+    # Process each section with a header and its items
+    for i in range(1, len(sections), 2):
+        section_title = sections[i].strip()
+        bullet_text = sections[i+1]
+
+        # Parse bullet points in this section
+        bullets = re.findall(r"\*\s+\*\*(.+?)\*\*:(.+?)(?=\n\*|\Z)", bullet_text.strip(), flags=re.DOTALL)
+
+        bullet_items = "".join(
+            f"<li><b>{title.strip()}:</b> {desc.strip()}</li>" for title, desc in bullets
+        )
+
+        section_html = f"""
+        <h2>{section_title}</h2>
+        <ul>
+            {bullet_items}
+        </ul>
+        """
+        html_sections.append(section_html)
+
+    # HTML email template
+    html = f"""
+    <html>
+    <head>
+      <style>
+        body {{
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f4;
+          padding: 20px;
+          color: #333;
+        }}
+        .container {{
+          background-color: #fff;
+          padding: 30px;
+          border-radius: 10px;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }}
+        h2 {{
+          color: #0066cc;
+          border-bottom: 2px solid #e0e0e0;
+          padding-bottom: 5px;
+        }}
+        ul {{
+          padding-left: 20px;
+        }}
+        li {{
+          margin-bottom: 10px;
+        }}
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        {''.join(html_sections)}
+      </div>
+    </body>
+    </html>
+    """
+    return html
+
+
 
 def generate_html(entries):
     html_content = """
@@ -87,8 +156,8 @@ minified_html = htmlmin.minify(
         reduce_boolean_attributes=True,
         remove_optional_attribute_quotes=False
     )
-
-response = requests.post(GAS_URL, data={"html": minified_html})
+ht= gemini_response_to_html(j.text)
+response = requests.post(GAS_URL, data={"html": ht})
 print(response.text)
 
 #rss_url = "https://nsearchives.nseindia.com/content/RSS/Insider_Trading.xml"
