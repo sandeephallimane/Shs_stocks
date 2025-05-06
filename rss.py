@@ -10,6 +10,7 @@ today_date = datetime.now().strftime("%B %d, %Y")
 ak= os.getenv('AK')
 genai.configure(api_key=ak)
 GAS_URL = os.getenv('GAS')
+model = genai.GenerativeModel("models/gemini-2.0-flash")  
 rss_urls = [ 
     "https://www.cnbctv18.com/commonfeeds/v1/cne/rss/market.xml",
     "https://www.cnbctv18.com/commonfeeds/v1/cne/rss/economy.xml",
