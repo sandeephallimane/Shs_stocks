@@ -72,7 +72,8 @@ def generate_html(entries):
           
 
 entries = fetch_rss_feeds(rss_urls)
-query = "Read and summarize financial position/n"+entries
+query = "Read and summarize below news items in neat bullet format\n" + "\n".join(entries)
+
 j=model.generate_content(query)
 print(j.text)
 html_output = generate_html(entries)
