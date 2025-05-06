@@ -156,8 +156,9 @@ minified_html = htmlmin.minify(
         reduce_boolean_attributes=True,
         remove_optional_attribute_quotes=False
     )
-ht= gemini_response_to_html(j.text)
-response = requests.post(GAS_URL, data={"html": ht})
+text = re.sub(r"\*\s+\*\*", r"\n• ", j.text)
+text = text.replace("**", " ")
+response = requests.post(GAS_URL, data={"html": text})
 print(response.text)
 
 #rss_url = "https://nsearchives.nseindia.com/content/RSS/Insider_Trading.xml"
