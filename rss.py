@@ -6,6 +6,66 @@ import re
 import htmlmin
 import requests
 from bs4 import BeautifulSoup
+from pygments import highlight
+from pygments.lexers import guess_lexer, TextLexer
+from pygments.formatters import HtmlFormatter
+import markdown
+
+def is_probable_markdown(text):
+    return bool(re.search(r"(^# |\*\*|`|^- |\n\d+\. )", text, re.M))
+
+def is_probable_code(text):
+    lines = text.strip().splitlines()
+    return len(lines) > 1 and all(re.match(r'\s{2,}', line) or re.match(r'\w+\s*=', line) for line in lines[:3])
+
+def convert_to_html(text: str) -> str:
+    content_html = ""
+
+    if is_probable_markdown(text):
+        content_html = markdown.markdown(text)
+    elif is_probable_code(text):
+        try:
+            lexer = guess_lexer(text)
+        except Exception:
+            lexer = TextLexer()
+        formatter = HtmlFormatter(noclasses=True, style="friendly")
+        content_html = highlight(text, lexer, formatter)
+    else:
+        content_html = f"<pre>{text}</pre>"
+
+    html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Content</title>
+  <style>
+    body {{
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 2rem;
+    }}
+    .container {{
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow-wrap: break-word;
+    }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    {content_html}
+  </div>
+</body>
+</html>
+"""
+    return html
+    
 today_date = datetime.now().strftime("%B %d, %Y")
 ak= os.getenv('AK')
 genai.configure(api_key=ak)
@@ -156,9 +216,10 @@ minified_html = htmlmin.minify(
         reduce_boolean_attributes=True,
         remove_optional_attribute_quotes=False
     )
+ht = convert_to_html(j.text)
 text = re.sub(r"\*\s+\*\*", r"\n• ", j.text)
 text = text.replace("**", " ")
-response = requests.post(GAS_URL, data={"html": text})
+response = requests.post(GAS_URL, data={"html": ht})
 print(response.text)
 
 #rss_url = "https://nsearchives.nseindia.com/content/RSS/Insider_Trading.xml"
