@@ -95,13 +95,11 @@ def fetch_rss_feeds(urls):
 def gemini_response_to_html(gemini_response: str) -> str:
     sections = re.split(r"\n\s*\*\*(.+?)\*\*:\s*\n", gemini_response.strip())
     
-    # Handle first part (intro, if any)
     html_sections = []
     intro = sections[0]
     if intro:
         html_sections.append(f"<p>{intro.strip()}</p>")
     
-    # Process each section with a header and its items
     for i in range(1, len(sections), 2):
         section_title = sections[i].strip()
         bullet_text = sections[i+1]
@@ -175,7 +173,6 @@ def generate_html(entries):
             </tr>
     """
 
-    # Loop through the entries and create each feed item
     for entry in entries:
         html_content += f"""
             <tr>
@@ -219,7 +216,7 @@ minified_html = htmlmin.minify(
 ht = convert_to_html(j.text)
 text = re.sub(r"\*\s+\*\*", r"\n• ", j.text)
 text = text.replace("**", " ")
-response = requests.post(GAS_URL, data={"html": ht})
+response = requests.post(GAS_URL, data={"html": ht,"ty":"RF"})
 print(response.text)
 
 #rss_url = "https://nsearchives.nseindia.com/content/RSS/Insider_Trading.xml"
