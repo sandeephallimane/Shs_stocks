@@ -498,5 +498,5 @@ if len(forecasts)> 0:
 
   print(email_body)
   file_path = msp
-  response = requests.post(GAS_URL, data={"html": email_body})
+  response = requests.post(GAS_URL, data={"html": email_body, "ty": "SF"})
   print(response.text)
