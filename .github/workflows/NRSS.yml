@@ -1,0 +1,31 @@
+name: NRSS
+on:
+  workflow_dispatch: 
+  schedule:
+    - cron: '0 1 * * *'
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'  
+      - name: Execute Python dependency
+        run: |
+          python -m pip uninstall -r req23.txt &&
+          python -m pip cache purge &&
+          python -m pip install --upgrade pip setuptools &&
+          python -m pip install -r req23.txt
+    
+      - name: Generate PDF
+        env:
+          AK: ${{ secrets.GEMINI_API }}
+          GAS: ${{ secrets.GAS }}
+        run: 
+          python News_rss.py
