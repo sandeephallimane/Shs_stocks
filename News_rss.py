@@ -10,7 +10,7 @@ from pygments import highlight
 from pygments.lexers import guess_lexer, TextLexer
 from pygments.formatters import HtmlFormatter
 import markdown
-
+import time 
 def is_probable_markdown(text):
     return bool(re.search(r"(^# |\*\*|`|^- |\n\d+\. )", text, re.M))
 
@@ -218,15 +218,18 @@ minified_html = htmlmin.minify(
         remove_optional_attribute_quotes=False
     )
 ht = convert_to_html(j.text)
+
 text = re.sub(r"\*\s+\*\*", r"\n• ", j.text)
 text = text.replace("**", " ")
 response = requests.post(GAS_URL, data={"html": ht,"ty":"RF"})
 print(response.text)
+time.sleep(120)
+query = "Fully read each item and create a full story in very interactive and intesting manner. I only need story in output\n" + "\n".join(
+    entry['title'] for entry in entries
+)
 
-#rss_url = "https://nsearchives.nseindia.com/content/RSS/Insider_Trading.xml"
-#feed = feedparser.parse(rss_url)
+j=model.generate_content(query)
+ht = convert_to_html(j.text)
 
-#links = []
-#for entry in feed.entries:
-   # links.append(entry.link)
-#print(links)
+response = requests.post(GAS_URL, data={"html": ht,"ty":"RF"})
+print(response.text)
