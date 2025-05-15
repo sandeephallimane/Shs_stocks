@@ -71,10 +71,11 @@ ak= os.getenv('AK')
 genai.configure(api_key=ak)
 GAS_URL = os.getenv('GAS')
 model = genai.GenerativeModel("models/gemini-2.0-flash")  
-rss_urls = [ 
+rss_urls = [
+    "https://indianexpress.com/feed/",
     "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
     "https://timesofindia.indiatimes.com/rssfeedmostrecent.cms",
-    "https://timesofindia.indiatimes.com/rssfeeds/-2128936835.cms",  
+    "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",  
     "https://www.thehindu.com/news/national/feeder/default.rss",
     "https://www.thehindu.com/news/international/feeder/default.rss",
     "https://www.news18.com/commonfeeds/v1/eng/rss/india.xml",
