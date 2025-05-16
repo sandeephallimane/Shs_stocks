@@ -234,10 +234,10 @@ ht = convert_to_html(j.text)
 
 response = requests.post(GAS_URL, data={"html": ht,"ty":"RF"})
 print(response.text)
-time.sleep(120)
-query = "Translate the following English text to Kannada in a formal and accurately:.\n" +j.text
-j=model.generate_content(query)
-ht = convert_to_html(j.text)
+#time.sleep(120)
+#query = "Translate the following English text to Kannada in a formal and accurately:.\n" +j.text
+#j=model.generate_content(query)
+#ht = convert_to_html(j.text)
 
-response = requests.post(GAS_URL, data={"html": ht,"ty":"RF"})
-print(response.text)
+#response = requests.post(GAS_URL, data={"html": ht,"ty":"RF"})
+#print(response.text)
