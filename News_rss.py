@@ -204,7 +204,8 @@ def generate_html(entries):
 
 entries = fetch_rss_feeds(rss_urls)
 print(entries)
-query = "Fully read each item and summarize below news in neat bullet format.Start yor response with Summary of news item today\n" + "\n".join(
+query = "Fully read each and every item and summarize below news in neat bullet format.Start yor response with Summary of news item today.
+Exclude film,entertainment and sports news. Summarize the content with sections of India, Global, State, Business,Economy, Science,Tech and other category\n" + "\n".join(
     entry['title'] for entry in entries
 )
 
@@ -224,16 +225,16 @@ text = re.sub(r"\*\s+\*\*", r"\n• ", j.text)
 text = text.replace("**", " ")
 response = requests.post(GAS_URL, data={"html": ht,"ty":"RF"})
 print(response.text)
-time.sleep(120)
-query = "Please process the following news items individually. For each item, read the content, identify the core information, and then summarize it in a brief narrative format, focusing on the sequence of events and their impact, while maintaining a factual and objective tone and avoiding casual language or fictional elements.\n" + "\n".join(
+#time.sleep(120)
+#query = "Please process the following news items individually. For each item, read the content, identify the core information, and then summarize it in a brief narrative format, focusing on the sequence of events and their impact, while maintaining a factual and objective tone and avoiding casual language or fictional elements.\n" + "\n".join(
     entry['title'] for entry in entries
 )
 
-j=model.generate_content(query)
-ht = convert_to_html(j.text)
+#j=model.generate_content(query)
+#ht = convert_to_html(j.text)
 
-response = requests.post(GAS_URL, data={"html": ht,"ty":"RF"})
-print(response.text)
+#response = requests.post(GAS_URL, data={"html": ht,"ty":"RF"})
+#print(response.text)
 #time.sleep(120)
 #query = "Translate the following English text to Kannada in a formal and accurately:.\n" +j.text
 #j=model.generate_content(query)
