@@ -204,8 +204,7 @@ def generate_html(entries):
 
 entries = fetch_rss_feeds(rss_urls)
 print(entries)
-query = "Fully read each and every item and summarize below news in neat bullet format.Start yor response with Summary of news item today.
-Exclude film,entertainment and sports news. Summarize the content with sections of India, Global, State, Business,Economy, Science,Tech and other category\n" + "\n".join(
+query = "Fully read each and every item and summarize below news in neat bullet format.Start yor response with Summary of news item today.Exclude film,entertainment and sports news. Summarize the content with sections of India, Global, State, Business,Economy, Science,Tech and other category\n" + "\n".join(
     entry['title'] for entry in entries
 )
 
