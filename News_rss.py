@@ -210,9 +210,7 @@ query = (
     "Exclude film, entertainment and sports news. "
     "Summarize the content with sections of India, Global, State, Business, "
     "Economy, Science, Tech and other category\n" 
-    + "\n".join(entry['title'] for entry in entries)
-)
-
+    + "\n".join(f"{entry['title']}\n{entry['summary']}" for entry in entries))
 j=model.generate_content(query)
 print(j.text)
 html_output = generate_html(entries)
