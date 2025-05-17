@@ -231,8 +231,8 @@ response = requests.post(GAS_URL, data={"html": ht,"ty":"RF"})
 print(response.text)
 #time.sleep(120)
 #query = "Please process the following news items individually. For each item, read the content, identify the core information, and then summarize it in a brief narrative format, focusing on the sequence of events and their impact, while maintaining a factual and objective tone and avoiding casual language or fictional elements.\n" + "\n".join(
-    entry['title'] for entry in entries
-)
+ #   entry['title'] for entry in entries
+#)
 
 #j=model.generate_content(query)
 #ht = convert_to_html(j.text)
