@@ -82,6 +82,7 @@ rss_urls = [
      "https://www.news18.com/commonfeeds/v1/eng/rss/world.xml",
     "https://www.cnbctv18.com/commonfeeds/v1/cne/rss/india.xml",  
     "https://feeds.feedburner.com/ndtvnews-top-stories",
+    "https://www.dnaindia.com/feeds/india.xml"
 ]
 
 def fetch_rss_feeds(urls):
@@ -206,6 +207,7 @@ entries = fetch_rss_feeds(rss_urls)
 print(entries)
 query = (
     "Fully read each and every item and summarize below news in neat bullet format. "
+    "Exclude news item which lacks logic and do not have sufficient info.Do not repeat any news item."
     "Start your response with 'Summary of news item today'. "
     "Exclude film, entertainment and sports news. "
     "Summarize the content with sections of India, Global, State, Business, "
