@@ -82,7 +82,10 @@ rss_urls = [
      "https://www.news18.com/commonfeeds/v1/eng/rss/world.xml",
     "https://www.cnbctv18.com/commonfeeds/v1/cne/rss/india.xml",  
     "https://feeds.feedburner.com/ndtvnews-top-stories",
-    "https://www.dnaindia.com/feeds/india.xml"
+    "https://www.dnaindia.com/feeds/india.xml",
+"https://www.firstpost.com/commonfeeds/v1/mfp/rss/india.xml",
+"https://www.firstpost.com/commonfeeds/v1/mfp/rss/world.xml"
+
 ]
 
 def fetch_rss_feeds(urls):
