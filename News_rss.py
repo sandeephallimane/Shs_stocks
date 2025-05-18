@@ -96,7 +96,7 @@ def fetch_rss_feeds(urls):
             summary = entry.get('summary') or entry.get('description') or "No summary available"
             all_entries.append({
                 "title": entry.get('title', 'No title'),
-               # "link": entry.get('link', '#'),
+                 "link": entry.get('link', '#'),
                 "summary": summary,
             })
     return all_entries
