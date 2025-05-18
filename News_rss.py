@@ -207,6 +207,11 @@ def generate_html(entries):
           
 entries = fetch_rss_feeds(rss_urls)
 #combined_entries = "\n".join(entries)
+entries_text = "\n".join(
+    f"{entry.get('title', '')}\n{entry.get('summary', '')}"
+    for entry in entries
+    if entry.get('summary') and entry['summary'].strip().lower() != 'No summary available'
+)
 
 query = (
     "Fully read each and every item and summarize below news in neat bullet format. "
@@ -215,7 +220,7 @@ query = (
     "Exclude film, entertainment and sports news. "
     "Summarize the content with sections of India, Global, State, Business, "
     "Economy, Science, Tech and other category.\n\n" +
-    entries
+    entries_text
 )
    # + "\n".join(f"{entry['title']}\n{entry['summary']}" for entry in entries))
 j=model.generate_content(query)
