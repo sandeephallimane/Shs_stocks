@@ -96,7 +96,7 @@ def fetch_rss_feeds(urls):
             summary = entry.get('summary') or entry.get('description') or "No summary available"
             all_entries.append({
                 "title": entry.get('title', 'No title'),
-                "link": entry.get('link', '#'),
+               # "link": entry.get('link', '#'),
                 "summary": summary,
             })
     return all_entries
@@ -215,7 +215,8 @@ query = (
     "Exclude film, entertainment and sports news. "
     "Summarize the content with sections of India, Global, State, Business, "
     "Economy, Science, Tech and other category\n" 
-    + "\n".join(f"{entry['title']}\n{entry['summary']}" for entry in entries))
+     + "\n".join(entries))
+   # + "\n".join(f"{entry['title']}\n{entry['summary']}" for entry in entries))
 j=model.generate_content(query)
 print(j.text)
 html_output = generate_html(entries)
