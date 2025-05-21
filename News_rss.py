@@ -206,22 +206,25 @@ def generate_html(entries):
     return html_content
           
 entries = fetch_rss_feeds(rss_urls)
-#combined_entries = "\n".join(entries)
+
 entries_text = "\n".join(
     f"{entry.get('title', '')}\n{entry.get('summary', '')}"
     for entry in entries
-    if entry.get('summary') and entry['summary'].strip().lower() != 'No summary available'
+    if entry.get('summary') and entry['summary'].strip().lower() != 'no summary available'
 )
 
 query = (
-    "Fully read each and every item and summarize below news in neat bullet format. "
-    "Exclude news item which lacks logic and do not have sufficient info. Do not repeat any news item. "
-    "Start your response with 'Summary of news item today'. "
-    "Exclude film, entertainment and sports news. "
-    "Summarize the content with sections of India, Global, State, Business, "
-    "Economy, Science, Tech and other category.\n\n" +
-    entries_text
+    "Fully read and analyze each news item in the provided text. Summarize the news in a neat bullet format.\n\n"
+    "Instructions:\n"
+    "- Exclude any news item that lacks logic or sufficient information.\n"
+    "- Do not repeat any news items.\n"
+    "- Exclude all film, entertainment, and sports news.\n"
+    "- Organize the summary into the following sections: India, Global, State, Business, Economy, Science, Tech, and Other.\n"
+    "- Start your response with: \"Summary of news item today:\"\n"
+    "- At the end, include a \"Did You Know?\" section with two randomly chosen terms from the text. Provide a simple explanation for each.\n\n"
+    f"Text:\n{entries_text}"
 )
+
    # + "\n".join(f"{entry['title']}\n{entry['summary']}" for entry in entries))
 j=model.generate_content(query)
 print(j.text)
