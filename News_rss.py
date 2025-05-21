@@ -11,16 +11,7 @@ from pygments.lexers import guess_lexer, TextLexer
 from pygments.formatters import HtmlFormatter
 import markdown
 import time 
-def is_probable_markdown(text):
-    return bool(re.search(r"(^# |\*\*|`|^- |\n\d+\. )", text, re.M))
-
-def is_probable_code(text):
-    lines = text.strip().splitlines()
-    return len(lines) > 1 and all(re.match(r'\s{2,}', line) or re.match(r'\w+\s*=', line) for line in lines[:3])
-
 def convert_to_html(text: str) -> str:
-    content_html = ""
-
     if is_probable_markdown(text):
         content_html = markdown.markdown(text)
     elif is_probable_code(text):
@@ -31,40 +22,28 @@ def convert_to_html(text: str) -> str:
         formatter = HtmlFormatter(noclasses=True, style="friendly")
         content_html = highlight(text, lexer, formatter)
     else:
-        content_html = f"<pre>{text}</pre>"
+        content_html = f"""
+        <pre style="white-space:pre-wrap; font-size:15px; color:#3e3e3e; background-color:#fdfdfd; padding:14px; border-radius:8px; border:1px solid #e2e2e2; line-height:1.6;">
+            {text}
+        </pre>
+        """
 
     html = f"""
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>Dynamic Content</title>
-  <style>
-    body {{
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 2rem;
-    }}
-    .container {{
-      max-width: 900px;
-      margin: auto;
-      background: #fff;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      overflow-wrap: break-word;
-    }}
-  </style>
-</head>
-<body>
-  <div class="container">
-    {content_html}
-  </div>
+<body style="margin:0; padding:30px; background-color:#f3f6fb; font-family:'Segoe UI', Tahoma, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:860px; margin:auto; background-color:#ffffff; padding:24px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.07); word-wrap:break-word;">
+    <tr>
+      <td style="font-size:16px; color:#2f2f2f; line-height:1.7;">
+        {content_html}
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
 """
     return html
+
     
 today_date = datetime.now().strftime("%B %d, %Y")
 ak= os.getenv('AK')
