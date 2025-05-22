@@ -30,7 +30,7 @@ def convert_to_html(text: str) -> str:
         content_html = highlight(text, lexer, formatter)
     else:
         content_html = f"""
-        <pre style="white-space:pre-wrap; font-size:15px; color:#34495e; background-color:#fdfefe; padding:16px; border-radius:8px; border:1px solid #e1e4e8; line-height:1.6; font-family:'Courier New', monospace;">
+        <pre style="white-space:pre-wrap; font-size:11px; color:#34495e; background-color:#fdfefe; padding:16px; border-radius:8px; border:1px solid #e1e4e8; line-height:1.6; font-family:'Courier New', monospace;">
 {text}
         </pre>
         """
@@ -41,7 +41,7 @@ def convert_to_html(text: str) -> str:
 <body style="margin:0; padding:32px; background-color:#eef2f7; font-family:'Segoe UI', Tahoma, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:880px; margin:auto; background-color:#ffffff; padding:28px; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,0.06); word-wrap:break-word;">
     <tr>
-      <td style="font-size:16px; color:#2c3e50; line-height:1.7;">
+      <td style="font-size:12px; color:#2c3e50; line-height:1.7;">
         {content_html}
       </td>
     </tr>
