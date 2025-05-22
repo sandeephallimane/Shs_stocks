@@ -19,8 +19,6 @@ def is_probable_code(text):
     return len(lines) > 1 and all(re.match(r'\s{2,}', line) or re.match(r'\w+\s*=', line) for line in lines[:3])
 
 def convert_to_html(text: str) -> str:
-    content_html = ""
-
     if is_probable_markdown(text):
         content_html = markdown.markdown(text)
     elif is_probable_code(text):
@@ -31,36 +29,23 @@ def convert_to_html(text: str) -> str:
         formatter = HtmlFormatter(noclasses=True, style="friendly")
         content_html = highlight(text, lexer, formatter)
     else:
-        content_html = f"<pre>{text}</pre>"
+        content_html = f"""
+        <pre style="white-space:pre-wrap; font-size:11px; color:#34495e; background-color:#fdfefe; padding:16px; border-radius:8px; border:1px solid #e1e4e8; line-height:1.6; font-family:'Courier New', monospace;">
+{text}
+        </pre>
+        """
 
     html = f"""
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>Dynamic Content</title>
-  <style>
-    body {{
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 2rem;
-    }}
-    .container {{
-      max-width: 900px;
-      margin: auto;
-      background: #fff;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      overflow-wrap: break-word;
-    }}
-  </style>
-</head>
-<body>
-  <div class="container">
-    {content_html}
-  </div>
+<body style="margin:0; padding:32px; background-color:#eef2f7; font-family:'Segoe UI', Tahoma, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:880px; margin:auto; background-color:#ffffff; padding:28px; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,0.06); word-wrap:break-word;">
+    <tr>
+      <td style="font-size:12px; color:#2c3e50; line-height:1.7;">
+        {content_html}
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
 """
