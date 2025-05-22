@@ -11,6 +11,13 @@ from pygments.lexers import guess_lexer, TextLexer
 from pygments.formatters import HtmlFormatter
 import markdown
 import time 
+def is_probable_markdown(text):
+    return bool(re.search(r"(^# |\*\*|`|^- |\n\d+\. )", text, re.M))
+
+def is_probable_code(text):
+    lines = text.strip().splitlines()
+    return len(lines) > 1 and all(re.match(r'\s{2,}', line) or re.match(r'\w+\s*=', line) for line in lines[:3])
+
 def convert_to_html(text: str) -> str:
     if is_probable_markdown(text):
         content_html = markdown.markdown(text)
