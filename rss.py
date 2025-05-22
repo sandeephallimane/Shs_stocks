@@ -187,9 +187,22 @@ def generate_html(entries):
           
 
 entries = fetch_rss_feeds(rss_urls)
-print(entries)
-query = "Read and summarize below news items in neat bullet format\n" + "\n".join(
-    entry['title'] for entry in entries
+entries_text = "\n".join(
+    f"{entry.get('title', '')}\n{entry.get('summary', '')}"
+    for entry in entries
+    if entry.get('summary') and entry['summary'].strip().lower() != 'no summary available'
+)
+
+query = (
+    "Fully read and analyze each news item in the provided text. Summarize the news in a neat bullet format.\n\n"
+    "Instructions:\n"
+    "- Exclude any news item that lacks logic or sufficient information.\n"
+    "- Do not repeat any news items.\n"
+    "- Exclude all film, entertainment, and sports news.\n"
+    "- Organize the summary into the proper sections: \n"
+    "- Start your response with: \"Summary of business and market news item today:\"\n"
+    "- At the end, include a \"Did You Know?\" section with two randomly chosen terms from the text. Provide a simple explanation for each.\n\n"
+    f"Text:\n{entries_text}"
 )
 
 j=model.generate_content(query)
