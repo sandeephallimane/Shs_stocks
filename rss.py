@@ -66,6 +66,7 @@ rss_urls = [
      "https://www.business-standard.com/rss/markets-106.rss",
     "https://cfo.economictimes.indiatimes.com/rss/topstories",  
     "https://www.thehindubusinessline.com/markets/stock-markets/feeder/default.rss",
+    "https://zeenews.india.com/rss/business.xml"
 ]
 
 def fetch_rss_feeds(urls):
