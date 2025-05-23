@@ -66,7 +66,12 @@ rss_urls = [
      "https://www.business-standard.com/rss/markets-106.rss",
     "https://cfo.economictimes.indiatimes.com/rss/topstories",  
     "https://www.thehindubusinessline.com/markets/stock-markets/feeder/default.rss",
-    "https://zeenews.india.com/rss/business.xml"
+    "https://zeenews.india.com/rss/business.xml",
+"https://www.thehindu.com/business/markets/feeder/default.rss",
+"https://www.thehindu.com/business/Economy/feeder/default.rss",
+"https://www.thehindu.com/business/Industry/feeder/default.rss",
+"https://www.goodreturns.in/rss/feeds/news-fb.xml",
+"https://www.goodreturns.in/rss/feeds/business-news-fb.xml"
 ]
 
 def fetch_rss_feeds(urls):
