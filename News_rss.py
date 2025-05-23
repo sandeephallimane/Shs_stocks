@@ -71,7 +71,10 @@ rss_urls = [
     "https://feeds.feedburner.com/ndtvnews-top-stories",
     "https://www.dnaindia.com/feeds/india.xml",
 "https://www.firstpost.com/commonfeeds/v1/mfp/rss/india.xml",
-"https://www.firstpost.com/commonfeeds/v1/mfp/rss/world.xml"
+"https://www.firstpost.com/commonfeeds/v1/mfp/rss/world.xml",
+"https://zeenews.india.com/rss/world-news.xml",
+"https://zeenews.india.com/rss/india-national-news.xml",
+"https://zeenews.india.com/rss/india-news.xml"
 
 ]
 
