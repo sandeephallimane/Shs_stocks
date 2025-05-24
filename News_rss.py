@@ -19,6 +19,8 @@ def is_probable_code(text):
     return len(lines) > 1 and all(re.match(r'\s{2,}', line) or re.match(r'\w+\s*=', line) for line in lines[:3])
 
 def convert_to_html(text: str) -> str:
+    current_date = datetime.now().strftime("📅 %Y-%m-%d")
+
     if is_probable_markdown(text):
         content_html = markdown.markdown(text)
     elif is_probable_code(text):
@@ -41,6 +43,11 @@ def convert_to_html(text: str) -> str:
 <body style="margin:0; padding:32px; background-color:#eef2f7; font-family:'Segoe UI', Tahoma, sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:880px; margin:auto; background-color:#ffffff; padding:28px; border-radius:12px; box-shadow:0 4px 16px rgba(0,0,0,0.06); word-wrap:break-word;">
     <tr>
+      <td style="font-size:13px; color:#2c3e50; font-weight:bold; padding-bottom:12px; text-align:right;">
+        {current_date}
+      </td>
+    </tr>
+    <tr>
       <td style="font-size:12px; color:#2c3e50; line-height:1.7;">
         {content_html}
       </td>
@@ -50,6 +57,7 @@ def convert_to_html(text: str) -> str:
 </html>
 """
     return html
+
 
 
     
