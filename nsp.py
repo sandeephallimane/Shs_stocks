@@ -33,7 +33,7 @@ if se is None :
     raise ValueError("Sending Email not found in environment variables")
 if re is None :
     raise ValueError("Receiver Email not found in environment variables")
-genai.configure(api_key=ak)
+
 MODELS = {
     "RandomForest": RandomForestRegressor(n_estimators=200, max_depth=10, random_state=42),
     "XGBoost": XGBRegressor(n_estimators=200, max_depth=6, learning_rate=0.05, objective='reg:squarederror', random_state=42),
