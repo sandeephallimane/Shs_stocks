@@ -15,7 +15,25 @@ from io import BytesIO
 import requests
 import warnings
 warnings.filterwarnings("ignore")
-
+stock_list=(os.getenv('TS')).split(',')
+print(ticker_symbols)
+ak= os.getenv('AK')
+se=os.getenv('SE')
+ma = os.getenv('MGA') 
+md = os.getenv('MGD') 
+GAS_URL = os.getenv('GAS')
+re=(os.getenv('RE')).split(',')
+print(re)
+pwd = os.getenv('PASSWORD')
+if pwd is None :
+    raise ValueError("Password not found in environment variables")
+if ak is None :
+    raise ValueError("API Key not found in environment variables")
+if se is None :
+    raise ValueError("Sending Email not found in environment variables")
+if re is None :
+    raise ValueError("Receiver Email not found in environment variables")
+genai.configure(api_key=ak)
 MODELS = {
     "RandomForest": RandomForestRegressor(n_estimators=200, max_depth=10, random_state=42),
     "XGBoost": XGBRegressor(n_estimators=200, max_depth=6, learning_rate=0.05, objective='reg:squarederror', random_state=42),
@@ -158,26 +176,12 @@ def build_html(df, chart_html):
     """
     return html
 
-def send_html_to_gas(html_string, web_app_url):
-    try:
-        response = requests.post(web_app_url, data={'html': html_string})
-        if response.status_code == 200:
-            print("✅ HTML sent successfully to GAS Web App.")
-        else:
-            print(f"❌ Failed to send. Status: {response.status_code}, Message: {response.text}")
-    except Exception as e:
-        print(f"Error sending HTML to GAS: {e}")
-
 if __name__ == "__main__":
-    stock_list = ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'AMZN', 'META', 'TSLA', 'NFLX', 'BABA', 'ADBE']  # Add up to 4000
-    top_n = 10
-    gas_web_app_url = "https://script.google.com/macros/s/your_deployment_id/exec"  # Replace with your Web App URL
-
+    top_n = 25
     top_stocks = forecast_top_stocks(stock_list, top_n=top_n, n_jobs=4)
     portfolio_df = build_portfolio(top_stocks)
     chart = generate_chart(portfolio_df)
     html = build_html(portfolio_df, chart)
-
-    send_html_to_gas(html, gas_web_app_url)
-
+    response = requests.post(GAS_URL, data={"html": html, "ty": "SF"})
+    print(response.text)
   
