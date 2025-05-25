@@ -66,7 +66,7 @@ def calculate_pht(df, cmp):
     minv = round(np.min(forecast['yhat'].tail(120)), 2)
     maxv = round(np.max(forecast['yhat'].tail(120)), 2)
     avgv = round(np.mean(forecast['yhat'].tail(120)), 2)    
-    avgr = ((avgv - cmp) * 100 / cmp).round(2)
+    avgr = round((avgv - cmp) * 100 / cmp, 2)
     return ["Prophet Model", avgv, maxv, minv, avgr]
     
 def calculate_ema(values, window):
@@ -313,7 +313,7 @@ def forecast_stock_returns(ticker_symbol):
         last_date = stock_data.index[-1].date()
         stock_data_52_high = stock_data['52 Week High'].iloc[-1].round(2)
         stock_data_52_low = stock_data['52 Week Low'].iloc[-1].round(2)
-        cv = stock_data['Returns'].std() / stock_data['Returns'].mean()
+        cv = stock_data['Returns'].std() / mean_ret if mean_ret != 0 else np.nan
         kurtosis_val =kurtosis(stock_data['Returns'])
         rsi = calculate_rsi(stock_data['Close'].tail(252), window=14) 
         current_cmp = stock_data['Close'].iloc[-1].round(2)
@@ -322,7 +322,7 @@ def forecast_stock_returns(ticker_symbol):
         TI.append('Buy' if 45 > (calculate_rsi(stock_data['Close'].tail(700))) > 30 else 'Sell')
         TI.append(cal_MACD((stock_data['Close']).tail(700)))
         TI.append(cal_GC((stock_data['Close']).tail(700)))
-        TI.append(calculate_stochastic_oscillator((stock_data).tail(700)))
+        TI.append(calculate_stochastic_oscillator(stock_data.tail(700)))
         if yearly_returns>9.9 and current_cmp>20 :
             z_scores = np.abs(stock_data['Returns'] - stock_data['Returns'].mean()) / stock_data['Returns'].std()
             stock_data = stock_data[(z_scores < 3)]  
