@@ -1,0 +1,10 @@
+yfinance
+pandas
+numpy
+matplotlib
+scikit-learn
+xgboost
+lightgbm
+ta
+joblib
+requests
