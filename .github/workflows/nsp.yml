@@ -31,6 +31,7 @@ jobs:
           python -m pip uninstall -r rnsp.txt &&
           python -m pip cache purge &&
           python -m pip install --upgrade pip setuptools &&
+          brew install libomp &&
           python -m pip install -r rnsp.txt
     
       - name: Generate PDF
