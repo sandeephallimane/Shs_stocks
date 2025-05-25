@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from ta.momentum import RSIIndicator
 from ta.trend import MACD
+import os
 from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 from lightgbm import LGBMRegressor
