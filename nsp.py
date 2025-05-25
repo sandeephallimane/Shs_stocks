@@ -17,7 +17,6 @@ import requests
 import warnings
 warnings.filterwarnings("ignore")
 stock_list=(os.getenv('TS')).split(',')
-print(ticker_symbols)
 ak= os.getenv('AK')
 se=os.getenv('SE')
 ma = os.getenv('MGA') 
