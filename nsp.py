@@ -46,12 +46,12 @@ def get_stock_data(ticker, period="3y"):
     if df.empty or len(df) < 250:
         raise ValueError(f"Not enough data for {ticker}")
     
-    df["Return"] = df["Adj Close"].pct_change()
+    df["Return"] = df["Close"].pct_change()
     df["RSI"] = RSIIndicator(close=df["Close"]).rsi()
     macd = MACD(close=df["Close"])
     df["MACD"] = macd.macd()
     df["Signal"] = macd.macd_signal()
-    df["Future_Price"] = df["Adj Close"].shift(-120).rolling(120).mean()
+    df["Future_Price"] = df["Close"].shift(-120).rolling(120).mean()
     df.dropna(inplace=True)
     return df
     
@@ -90,7 +90,7 @@ def process_stock(ticker):
     try:
         df = get_stock_data(ticker)
         model_name, future_price_pred = train_best_model(df)
-        current_price = df["Adj Close"].iloc[-1]
+        current_price = df["Close"].iloc[-1]
         expected_return = (future_price_pred - current_price) / current_price
         return {
             "Ticker": ticker,
