@@ -63,31 +63,29 @@ def safe_process(ticker):
     except Exception as e:
         print(f"Error processing {ticker}: {e}")
         return None
-        
 def train_best_model(df):
-    features = ["RSI", "MACD", "Signal"]
-    target = "Future_Price"
-    X = df[features]
-    y = df[target]
+    features = ["RSI", "MACD", "Signal"]
+    target = "Future_Price"
+    X = df[features]
+    y = df[target]
 
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-    split_idx = int(len(X) * 0.8)
-    X_train, X_test = X_scaled[:split_idx], X_scaled[split_idx:]
-    y_train, y_test = y[:split_idx], y[split_idx:]
+    split_idx = int(len(X) * 0.8)
+    X_train, X_test = X_scaled[:split_idx], X_scaled[split_idx:]
+    y_train, y_test = y[:split_idx], y[split_idx:]
 
-    results = {}
-    for name, model in MODELS.items():
-        model.fit(X_train, y_train)
-        preds = model.predict(X_test)
-        mse = mean_squared_error(y_test, preds)
-        # Reshape to 2D for prediction
-        next_pred = model.predict(X_scaled[-1].reshape(1, -1))[0]
-        results[name] = {"model": model, "mse": mse, "future_price_pred": next_pred}
+    results = {}
+    for name, model in MODELS.items():
+        model.fit(X_train, y_train)
+        preds = model.predict(X_test)
+        mse = mean_squared_error(y_test, preds)
+        next_pred = model.predict(X_scaled[-1].reshape(1, -1))[0]
+        results[name] = {"model": model, "mse": mse, "future_price_pred": next_pred}
 
-    best_model_name = min(results, key=lambda k: results[k]["mse"])
-    return best_model_name, results[best_model_name]["future_price_pred"]
+    best_model_name = min(results, key=lambda k: results[k]["mse"])
+    return best_model_name, results[best_model_name]["future_price_pred"]
 
 
 def process_stock(ticker):
