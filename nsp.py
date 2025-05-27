@@ -93,19 +93,20 @@ def process_stock(ticker):
         print(f"[ERROR] {ticker}: {e}")
         return None
 
+def forecast_top_stocks(stock_list, top_n=25, n_jobs=4):
+    def safe_process(ticker):
+        try:
+            return process_stock(ticker)
+        except Exception as e:
+            print(f"Error processing {ticker}: {e}")
+            return None
 
-def forecast_top_stocks(stock_list, top_n=20, n_jobs=4):
-    def safe_process(ticker):
-        try:
-            return process_stock(ticker)
-        except Exception as e:
-            print(f"Error processing {ticker}: {e}")
-            return None
+    results = Parallel(n_jobs=n_jobs, backend="loky")(
+        delayed(safe_process)(ticker) for ticker in stock_list)
+    valid_results = [res for res in results if res]
+    sorted_results = sorted(valid_results, key=lambda x: x["Expected Return"], reverse=True)
 
-    results = Parallel(n_jobs=n_jobs, backend="loky")(delayed(safe_process)(ticker) for ticker in stock_list)
-    valid_results = [res for res in results if res]
-    sorted_results = sorted(valid_results, key=lambda x: x["Expected Return"], reverse=True)
-    return sorted_results[:top_n]
+    return sorted_results[:top_n]
 
 
 def build_portfolio(top_stocks):
