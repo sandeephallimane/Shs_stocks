@@ -53,7 +53,14 @@ def get_stock_data(ticker, period="3y"):
     df["Future_Price"] = df["Adj Close"].shift(-120).rolling(120).mean()
     df.dropna(inplace=True)
     return df
-
+    
+def safe_process(ticker):
+    try:
+        return process_stock(ticker)
+    except Exception as e:
+        print(f"Error processing {ticker}: {e}")
+        return None
+        
 def train_best_model(df):
     features = ["RSI", "MACD", "Signal"]
     target = "Future_Price"
@@ -93,19 +100,14 @@ def process_stock(ticker):
         print(f"[ERROR] {ticker}: {e}")
         return None
 
-def forecast_top_stocks(stock_list, top_n=25, n_jobs=4):
-    def safe_process(ticker):
-        try:
-            return process_stock(ticker)
-        except Exception as e:
-            print(f"Error processing {ticker}: {e}")
-            return None
 
+def forecast_top_stocks(stock_list, top_n=20, n_jobs=4):
     results = Parallel(n_jobs=n_jobs, backend="loky")(
-        delayed(safe_process)(ticker) for ticker in stock_list)
+        delayed(safe_process)(ticker) for ticker in stock_list
+    )
+
     valid_results = [res for res in results if res]
     sorted_results = sorted(valid_results, key=lambda x: x["Expected Return"], reverse=True)
-
     return sorted_results[:top_n]
 
 
