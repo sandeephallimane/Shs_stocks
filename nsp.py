@@ -45,12 +45,14 @@ def get_stock_data(ticker, period="3y"):
     df = yf.download(ticker, period=period, progress=False)
     if df.empty or len(df) < 250:
         raise ValueError(f"Not enough data for {ticker}")
-    
+
     df["Return"] = df["Close"].pct_change()
     df["RSI"] = RSIIndicator(close=df["Close"]).rsi()
+    
     macd = MACD(close=df["Close"])
-    df["MACD"] = macd.macd()
-    df["Signal"] = macd.macd_signal()
+    df["MACD"] = macd.macd().squeeze()
+    df["Signal"] = macd.macd_signal().squeeze()
+
     df["Future_Price"] = df["Close"].shift(-120).rolling(120).mean()
     df.dropna(inplace=True)
     return df
