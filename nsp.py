@@ -62,7 +62,8 @@ def safe_process(ticker):
         return process_stock(ticker)
     except Exception as e:
         print(f"Error processing {ticker}: {e}")
-        return None
+        return None 
+
 def train_best_model(df):
     features = ["RSI", "MACD", "Signal"]
     target = "Future_Price"
@@ -86,7 +87,6 @@ def train_best_model(df):
 
     best_model_name = min(results, key=lambda k: results[k]["mse"])
     return best_model_name, results[best_model_name]["future_price_pred"]
-
 
 def process_stock(ticker):
     try:
