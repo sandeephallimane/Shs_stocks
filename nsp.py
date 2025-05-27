@@ -15,6 +15,7 @@ import base64
 from io import BytesIO
 import requests
 import warnings
+from concurrent.futures import ThreadPoolExecutor, as_completed
 warnings.filterwarnings("ignore")
 stock_list=(os.getenv('TS')).split(',')
 ak= os.getenv('AK')
@@ -102,12 +103,15 @@ def process_stock(ticker):
 
 
 def forecast_top_stocks(stock_list, top_n=20, n_jobs=4):
-    results = Parallel(n_jobs=n_jobs, backend="loky")(
-        delayed(safe_process)(ticker) for ticker in stock_list
-    )
+    results = []
+    with ThreadPoolExecutor(max_workers=n_jobs) as executor:
+        future_to_ticker = {executor.submit(safe_process, ticker): ticker for ticker in stock_list}
+        for future in as_completed(future_to_ticker):
+            res = future.result()
+            if res:
+                results.append(res)
 
-    valid_results = [res for res in results if res]
-    sorted_results = sorted(valid_results, key=lambda x: x["Expected Return"], reverse=True)
+    sorted_results = sorted(results, key=lambda x: x["Expected Return"], reverse=True)
     return sorted_results[:top_n]
 
 
