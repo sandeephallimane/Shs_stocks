@@ -46,18 +46,18 @@ def get_podcast_script(news_text):
     """Generate a podcast script using Gemini API."""
     def request_gemini():
         query = (
-            "Read and analyze the provided news text and create a fun, engaging podcast script "
-            "as a conversation between two hosts, Host 1 and Host 2.\n\n"
-            "Instructions:\n"
-            "- Use a friendly, witty tone while staying informative.\n"
-            "- Start with a short welcome and today's date.\n"
-            "- Have hosts naturally alternate lines — Host 1 then Host 2, back and forth.\n"
-            "- Cover India, Global, State, Business, Economy, Science, Tech, and Other news.\n"
-            "- No film, entertainment, or sports news.\n"
-            "- End with a 'Did You Know?' section with two interesting facts.\n"
-            "- Output only the spoken lines, prefixing each with 'Host 1:' or 'Host 2:'.\n\n"
-            f"Text:\n{news_text}"
-        )
+    "Read and analyze the provided news text and create a fun, engaging podcast script "
+    "for a single host to read clearly and naturally.\n\n"
+    "Instructions:\n"
+    "- Use a friendly, witty, and conversational tone while staying informative.\n"
+    "- Start with a short warm welcome and mention today's date.\n"
+    "- Organize the news into clear sections: India, Global, State, Business, Economy, Science, Tech, and Other news.\n"
+    "- Avoid film, entertainment, and sports news.\n"
+    "- Use smooth transitions between sections so it feels like a natural flow, not a list.\n"
+    "- End with a light 'Did You Know?' segment that shares two surprising or fun facts.\n"
+    "- Output only the spoken script, prefixing each spoken part with 'Host:'.\n\n"
+    f"Text:\n{news_text}"
+)
         model = genai.GenerativeModel("models/gemini-2.0-flash")
         resp = model.generate_content(query)
         return resp.text.strip()
