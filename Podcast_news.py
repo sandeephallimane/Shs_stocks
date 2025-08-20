@@ -76,18 +76,13 @@ def get_podcast_script(news_text):
             "- Output only the spoken lines, prefixing each with 'Host 1:' or 'Host 2:'.\n\n"
             f"Text:\n{news_text}"
         )
-
+        model = genai.GenerativeModel("models/gemini-2.0-flash") 
         headers = {"Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY}
         data = {
             "contents": [{"parts": [{"text": query}]}],
             "generationConfig": {"temperature": 0.8, "topP": 0.9, "maxOutputTokens": 4096}
         }
-        resp = requests.post(
-            "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent",
-            headers=headers,
-            json=data,
-            timeout=60
-        )
+        resp = model.generate_content(query)
         resp.raise_for_status()
         output = resp.json()
         return output["candidates"][0]["content"]["parts"][0]["text"]
