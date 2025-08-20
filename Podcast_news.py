@@ -1,4 +1,5 @@
 import requests
+import feedparser
 from datetime import datetime
 from gtts import gTTS
 import os
