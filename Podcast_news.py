@@ -41,21 +41,22 @@ def retry_request(func, retries=3, delay=2):
 def get_podcast_script(news_text):
     def request_gemini():
         query = (
+    "Reaquery = (
     "Read and analyze the provided news text, then create a podcast script "
-    "for a single host to read clearly and naturally.\n\n"
+    "for a single host to read aloud using text-to-speech.\n\n"
     "Instructions:\n"
     "- Tone: Friendly, witty, conversational, yet informative.\n"
     "- Begin with a warm welcome and mention today's date.\n"
     "- Organize news into smooth-flowing sections: India, Global, State, Business, Economy, Science, Tech, and Other news.\n"
-    "- Avoid film, entertainment, and sports topics.\n"
-    "- Use natural transitions, not bullet lists.\n"
-    "- Each spoken line must begin with 'Host:'.\n"
-    "- Sentences should be short and easy to speak aloud.\n"
-    "- Add light pacing cues like '...' or '[pause]' where a pause feels natural.\n"
+    "- Do not include film, entertainment, or sports topics.\n"
+    "- Use natural transitions, no bullet lists.\n"
+    "- Keep sentences short, simple, and easy for text-to-speech.\n"
+    "- Use '...' to mark short pauses for pacing.\n"
     "- End with a cheerful 'Did You Know?' segment that shares two fun or surprising facts.\n"
-    "- Output ONLY the spoken script (with 'Host:'), no extra commentary or formatting.\n\n"
+    "- Output ONLY the spoken script, no labels, commentary, or formatting.\n\n"
     f"News text to base the script on:\n{news_text}"
 )
+
         model = genai.GenerativeModel("models/gemini-2.0-flash")
         resp = model.generate_content(query)
         return resp.text.strip()
