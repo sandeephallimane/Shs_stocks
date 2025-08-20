@@ -6,9 +6,10 @@ from gtts import gTTS
 from pydub import AudioSegment
 import os
 import time
+import base64
 
 # ----------------- CONFIG -----------------
-GAS_URL = "https://script.google.com/macros/s/AKfycbyMV-0-AMjdr5Z8m1yAZAiqcztekwol90aSM5DDeNTOKhwxfkjvYb_rsfe2tB25ppan/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbw2F-uOtzNJrPNkRCg4MzRp76Jg_khb0fRqFFlW9k92kUsxbDlAuBqZP8yncPoDrefy/exec"
 GEMINI_API_KEY = os.getenv("AK")
 genai.configure(api_key=GEMINI_API_KEY)
 
@@ -130,16 +131,19 @@ podcast_file = f"podcast_{timestamp}.mp3"
 generate_podcast_audio(podcast_script, podcast_file)
 print(f"🎙 Podcast saved as {podcast_file}")
 
-# Upload to Google Apps Script
 with open(podcast_file, "rb") as mp3_f:
-    try:
-        response = requests.post(
-            GAS_URL,
-            files={"podcast": mp3_f},
-            data={"type": "PODCAST"}
-        )
-        response.raise_for_status()
-        print("📤 GAS Upload Success:", response.text)
-    except Exception as e:
-        print("❌ Failed to upload to GAS:", e)
-            
+    b64_audio = base64.b64encode(mp3_f.read()).decode("utf-8")
+
+try:
+    response = requests.post(
+        GAS_URL,
+        json={  # 👈 JSON, not files/data
+            "type": "PODCAST",
+            "filename": podcast_file,
+            "content": b64_audio
+        }
+    )
+    response.raise_for_status()
+    print("📤 GAS Upload Success:", response.text)
+except Exception as e:
+    print("❌ Failed to upload to GAS:", e)
