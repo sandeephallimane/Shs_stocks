@@ -7,11 +7,18 @@ from pydub import AudioSegment
 import os
 import time
 import base64
+import random
+import glob
+
 
 GAS_URL = "https://script.google.com/macros/s/AKfycbzrxYmHwMmqmjwZZ9vT1mXdGuP4-VslkZ6j_D7JoXuUsG86TK-jYwg_FJreQpBkOnCD/exec"
 GEMINI_API_KEY = os.getenv("AK")
+MUSIC_FOLDER = "Music"   # 👈 Folder in your repo where music files are stored
+
 genai.configure(api_key=GEMINI_API_KEY)
 
+
+# === HELPERS ===
 def fetch_rss_feeds(urls):
     all_entries = []
     for url in set(urls): 
@@ -41,21 +48,20 @@ def retry_request(func, retries=3, delay=2):
 def get_podcast_script(news_text):
     def request_gemini():
         query = (
-    "Reaquery = (
-    "Read and analyze the provided news text, then create a podcast script "
-    "for a single host to read aloud using text-to-speech.\n\n"
-    "Instructions:\n"
-    "- Tone: Friendly, witty, conversational, yet informative.\n"
-    "- Begin with a warm welcome and mention today's date.\n"
-    "- Organize news into smooth-flowing sections: India, Global, State, Business, Economy, Science, Tech, and Other news.\n"
-    "- Do not include film, entertainment, or sports topics.\n"
-    "- Use natural transitions, no bullet lists.\n"
-    "- Keep sentences short, simple, and easy for text-to-speech.\n"
-    "- Use '...' to mark short pauses for pacing.\n"
-    "- End with a cheerful 'Did You Know?' segment that shares two fun or surprising facts.\n"
-    "- Output ONLY the spoken script, no labels, commentary, or formatting.\n\n"
-    f"News text to base the script on:\n{news_text}"
-)
+            "Read and analyze the provided news text, then create a podcast script "
+            "for a single host to read aloud using text-to-speech.\n\n"
+            "Instructions:\n"
+            "- Tone: Friendly, witty, conversational, yet informative.\n"
+            "- Begin with a warm welcome and mention today's date.\n"
+            "- Organize news into smooth-flowing sections: India, Global, State, Business, Economy, Science, Tech, and Other news.\n"
+            "- Do not include film, entertainment, or sports topics.\n"
+            "- Use natural transitions, no bullet lists.\n"
+            "- Keep sentences short, simple, and easy for text-to-speech.\n"
+            "- Use '...' to mark short pauses for pacing.\n"
+            "- End with a cheerful 'Did You Know?' segment that shares two fun or surprising facts.\n"
+            "- Output ONLY the spoken script, no labels, commentary, or formatting.\n\n"
+            f"News text to base the script on:\n{news_text}"
+        )
 
         model = genai.GenerativeModel("models/gemini-2.0-flash")
         resp = model.generate_content(query)
@@ -64,8 +70,8 @@ def get_podcast_script(news_text):
     return retry_request(request_gemini)
 
 
-def generate_podcast_audio(script_text, filename):
-    """Generate TTS audio from podcast script, splitting if too long."""
+def generate_podcast_audio(script_text, filename, music_folder=MUSIC_FOLDER):
+    """Generate TTS audio from podcast script, overlay with random background music."""
     def tts_job():
         max_len = 4500  # gTTS text limit
         chunks = [script_text[i:i + max_len] for i in range(0, len(script_text), max_len)]
@@ -77,11 +83,30 @@ def generate_podcast_audio(script_text, filename):
             final_audio += AudioSegment.from_mp3(temp_file)
             os.remove(temp_file)
 
+        # 🎵 Pick random background music from repo
+        music_files = glob.glob(os.path.join(music_folder, "*.mp3"))
+        if music_files:
+            bg_file = random.choice(music_files)
+            print(f"🎶 Using background track: {bg_file}")
+
+            bg_music = AudioSegment.from_mp3(bg_file)
+            bg_music = bg_music - 18  # lower volume
+
+            # Loop bg music if shorter than narration
+            if len(bg_music) < len(final_audio):
+                repeat_count = (len(final_audio) // len(bg_music)) + 1
+                bg_music = bg_music * repeat_count
+
+            # Match length and overlay
+            bg_music = bg_music[:len(final_audio)]
+            final_audio = final_audio.overlay(bg_music)
+
         final_audio.export(filename, format="mp3")
 
     retry_request(tts_job)
 
 
+# === MAIN ===
 if not GEMINI_API_KEY:
     raise ValueError("❌ GEMINI_API_KEY is missing. Set it in your environment variables.")
 
@@ -122,7 +147,7 @@ with open(transcript_file, "w", encoding="utf-8") as f:
 print(f"✅ Transcript saved as {transcript_file}")
 
 podcast_file = f"podcast_{timestamp}.mp3"
-generate_podcast_audio(podcast_script, podcast_file)
+generate_podcast_audio(podcast_script, podcast_file, music_folder=MUSIC_FOLDER)
 print(f"🎙 Podcast saved as {podcast_file}")
 
 with open(podcast_file, "rb") as mp3_f:
@@ -131,7 +156,7 @@ with open(podcast_file, "rb") as mp3_f:
 try:
     response = requests.post(
         GAS_URL,
-        json={  # 👈 JSON, not files/data
+        json={
             "type": "PODCAST",
             "filename": podcast_file,
             "content": b64_audio
@@ -141,3 +166,4 @@ try:
     print("📤 GAS Upload Success:", response.text)
 except Exception as e:
     print("❌ Failed to upload to GAS:", e)
+            
