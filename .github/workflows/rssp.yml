@@ -1,4 +1,4 @@
-name: RSS
+name: RSSP
 on:
   workflow_dispatch: 
   schedule:
