@@ -20,9 +20,9 @@ jobs:
         run: |
           python -m pip uninstall -r req23.txt &&
           python -m pip cache purge &&
+          brew install ffmpeg &&
           python -m pip install --upgrade pip setuptools &&
-          python -m pip install -r req23.txt
-    
+          python -m pip install -r req23.txtbrew 
       - name: Generate PDF
         env:
           AK: ${{ secrets.GEMINI_API }}
