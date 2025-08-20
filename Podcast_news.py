@@ -8,7 +8,7 @@ import os
 import time
 
 # ----------------- CONFIG -----------------
-GAS_URL = "https://script.google.com/macros/s/AKfycbx9ynSOKtlNW1fTg_ZBMvSrPvwNI6X09UEVw-zIfG344biDkIb7XVEepQrCNFw7grg/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbyMV-0-AMjdr5Z8m1yAZAiqcztekwol90aSM5DDeNTOKhwxfkjvYb_rsfe2tB25ppan/exec"
 GEMINI_API_KEY = os.getenv("AK")
 genai.configure(api_key=GEMINI_API_KEY)
 
