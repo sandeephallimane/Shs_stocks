@@ -8,16 +8,13 @@ import os
 import time
 import base64
 
-# ----------------- CONFIG -----------------
-GAS_URL = "https://script.google.com/macros/s/AKfycbw2F-uOtzNJrPNkRCg4MzRp76Jg_khb0fRqFFlW9k92kUsxbDlAuBqZP8yncPoDrefy/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbzrxYmHwMmqmjwZZ9vT1mXdGuP4-VslkZ6j_D7JoXuUsG86TK-jYwg_FJreQpBkOnCD/exec"
 GEMINI_API_KEY = os.getenv("AK")
 genai.configure(api_key=GEMINI_API_KEY)
 
-# ----------------- FUNCTIONS -----------------
 def fetch_rss_feeds(urls):
-    """Fetch news entries from a list of RSS URLs."""
     all_entries = []
-    for url in set(urls):  # ✅ Deduplicate URLs
+    for url in set(urls): 
         feed = feedparser.parse(url)
         for entry in feed.entries:
             summary = entry.get("summary") or entry.get("description") or "No summary available"
@@ -30,7 +27,6 @@ def fetch_rss_feeds(urls):
 
 
 def retry_request(func, retries=3, delay=2):
-    """Retry wrapper for unstable API calls."""
     for attempt in range(retries):
         try:
             return func()
@@ -43,7 +39,6 @@ def retry_request(func, retries=3, delay=2):
 
 
 def get_podcast_script(news_text):
-    """Generate a podcast script using Gemini API."""
     def request_gemini():
         query = (
     "Read and analyze the provided news text and create a fun, engaging podcast script "
@@ -83,7 +78,6 @@ def generate_podcast_audio(script_text, filename):
     retry_request(tts_job)
 
 
-# ----------------- MAIN LOGIC -----------------
 if not GEMINI_API_KEY:
     raise ValueError("❌ GEMINI_API_KEY is missing. Set it in your environment variables.")
 
@@ -105,7 +99,6 @@ rss_urls = [
     "https://zeenews.india.com/rss/india-news.xml"
 ]
 
-# Fetch and prepare news
 entries = fetch_rss_feeds(rss_urls)
 entries_text = "\n".join(
     f"{entry.get('title', '')}\n{entry.get('summary', '')}"
@@ -113,20 +106,17 @@ entries_text = "\n".join(
     if entry.get("summary") and entry["summary"].strip().lower() != "no summary available"
 )
 
-# Generate podcast script
 podcast_script = get_podcast_script(entries_text)
 if not podcast_script:
     raise ValueError("❌ Gemini returned an empty podcast script")
 
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-# Save transcript
 transcript_file = f"podcast_transcript_{timestamp}.txt"
 with open(transcript_file, "w", encoding="utf-8") as f:
     f.write(podcast_script)
 print(f"✅ Transcript saved as {transcript_file}")
 
-# Generate podcast MP3
 podcast_file = f"podcast_{timestamp}.mp3"
 generate_podcast_audio(podcast_script, podcast_file)
 print(f"🎙 Podcast saved as {podcast_file}")
