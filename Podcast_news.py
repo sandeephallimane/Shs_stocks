@@ -78,13 +78,7 @@ def get_podcast_script(news_text):
             f"Text:\n{news_text}"
         )
         model = genai.GenerativeModel("models/gemini-2.0-flash") 
-        headers = {"Content-Type": "application/json", "x-goog-api-key": GEMINI_API_KEY}
-        data = {
-            "contents": [{"parts": [{"text": query}]}],
-            "generationConfig": {"temperature": 0.8, "topP": 0.9, "maxOutputTokens": 4096}
-        }
         resp = model.generate_content(query)
-        resp.raise_for_status()
         output = resp.json()
         return output["candidates"][0]["content"]["parts"][0]["text"]
 
