@@ -4,7 +4,7 @@ from gtts import gTTS
 import os
 import time
 
-GAS_URL = "YOUR_GAS_ENDPOINT_HERE"  
+GAS_URL = "https://script.google.com/macros/s/AKfycbx9ynSOKtlNW1fTg_ZBMvSrPvwNI6X09UEVw-zIfG344biDkIb7XVEepQrCNFw7grg/exec"  
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 entries_text = "..."  # Replace with your news text
 
