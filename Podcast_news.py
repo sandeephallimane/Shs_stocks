@@ -1,13 +1,14 @@
 import requests
 import feedparser
 from datetime import datetime
+import google.generativeai as genai
 from gtts import gTTS
 import os
 import time
 
 GAS_URL = "https://script.google.com/macros/s/AKfycbx9ynSOKtlNW1fTg_ZBMvSrPvwNI6X09UEVw-zIfG344biDkIb7XVEepQrCNFw7grg/exec"  
 GEMINI_API_KEY = os.getenv("AK")
-
+genai.configure(api_key=GEMINI_API_KEY)
 def fetch_rss_feeds(urls):
     all_entries = []
     for url in urls:
