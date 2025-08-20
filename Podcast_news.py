@@ -53,11 +53,11 @@ def get_podcast_script(news_text):
             "Instructions:\n"
             "- Tone: Friendly, witty, conversational, yet informative.\n"
             "- Begin with a warm welcome and mention today's date.\n"
-            "- Organize news into smooth-flowing sections: India, Global, State, Business, Economy, Science, Tech, and Other news.\n"
+            "- Organize news into smooth-flowing sections: India, Global, State, Business, Economy, Science, Tech, and Other news. Please include atleast 4 news from each topic and include most important news items\n"
             "- Do not include film, entertainment, or sports topics.\n"
             "- Use natural transitions, no bullet lists.\n"
             "- Keep sentences short, simple, and easy for text-to-speech.\n"
-            "- Use '...' to mark short pauses for pacing.\n"
+            "- Use '.........' to mark short pauses for pacing.\n"
             "- End with a cheerful 'Did You Know?' segment that shares two fun or surprising facts.\n"
             "- Output ONLY the spoken script, no labels, commentary, or formatting.\n\n"
             f"News text to base the script on:\n{news_text}"
@@ -90,7 +90,7 @@ def generate_podcast_audio(script_text, filename, music_folder=MUSIC_FOLDER):
             print(f"🎶 Using background track: {bg_file}")
 
             bg_music = AudioSegment.from_mp3(bg_file)
-            bg_music = bg_music - 18  # lower volume
+            bg_music = bg_music - 20  # lower volume
 
             # Loop bg music if shorter than narration
             if len(bg_music) < len(final_audio):
