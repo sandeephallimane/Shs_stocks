@@ -6,7 +6,46 @@ import time
 
 GAS_URL = "https://script.google.com/macros/s/AKfycbx9ynSOKtlNW1fTg_ZBMvSrPvwNI6X09UEVw-zIfG344biDkIb7XVEepQrCNFw7grg/exec"  
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-entries_text = "..."  # Replace with your news text
+
+def fetch_rss_feeds(urls):
+    all_entries = []
+    for url in urls:
+        feed = feedparser.parse(url)
+        for entry in feed.entries:
+            summary = entry.get('summary') or entry.get('description') or "No summary available"
+            all_entries.append({
+                "title": entry.get('title', 'No title'),
+                 "link": entry.get('link', '#'),
+                "summary": summary,
+            })
+    return all_entries
+    
+rss_urls = [
+    "https://indianexpress.com/feed/",
+    "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
+    "https://timesofindia.indiatimes.com/rssfeedmostrecent.cms",
+    "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",  
+    "https://www.thehindu.com/news/national/feeder/default.rss",
+    "https://www.thehindu.com/news/international/feeder/default.rss",
+    "https://www.news18.com/commonfeeds/v1/eng/rss/india.xml",
+     "https://www.news18.com/commonfeeds/v1/eng/rss/world.xml",
+    "https://www.cnbctv18.com/commonfeeds/v1/cne/rss/india.xml",  
+    "https://feeds.feedburner.com/ndtvnews-top-stories",
+    "https://www.dnaindia.com/feeds/india.xml",
+"https://www.firstpost.com/commonfeeds/v1/mfp/rss/india.xml",
+"https://www.firstpost.com/commonfeeds/v1/mfp/rss/world.xml",
+"https://zeenews.india.com/rss/world-news.xml",
+"https://zeenews.india.com/rss/india-national-news.xml",
+"https://zeenews.india.com/rss/india-news.xml"
+]
+
+entries = fetch_rss_feeds(rss_urls)
+
+entries_text = "\n".join(
+    f"{entry.get('title', '')}\n{entry.get('summary', '')}"
+    for entry in entries
+    if entry.get('summary') and entry['summary'].strip().lower() != 'no summary available'
+)
 
 def retry_request(func, retries=3, delay=2):
 
