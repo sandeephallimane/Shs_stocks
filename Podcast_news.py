@@ -11,7 +11,7 @@ import random
 import glob
 
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbzlwz0jWZDxJJN3wB8ynf54TcDSZ4LGpZN4y71lXGiCAM-cIXJqZyR0xOR1mPsannWU/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbw5dYBg1OKrRJ7clihGcTYNyJ22IOZgnjORBkVlHnEZw0MI5MIpgMy7fH6dni3d2faF/exec"
 GEMINI_API_KEY = os.getenv("AK")
 MUSIC_FOLDER = "Music"   # 👈 Folder in your repo where music files are stored
 
