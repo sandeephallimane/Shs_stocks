@@ -155,7 +155,8 @@ try:
         json={
             "type": "PODCAST",
             "filename": podcast_file,
-            "content": b64_audio
+            "content": b64_audio,
+            "RN": "Business News"
         }
     )
     response.raise_for_status()
