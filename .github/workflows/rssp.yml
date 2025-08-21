@@ -2,7 +2,7 @@ name: RSSP
 on:
   workflow_dispatch: 
   schedule:
-    - cron: '0 4 * * *'
+    - cron: '0 5 * * *'
 
 jobs:
   build:
@@ -29,3 +29,9 @@ jobs:
           GAS: ${{ secrets.GAS }}
         run: 
           python Podcast_news.py
+      - name: Generate PDF2
+        env:
+          AK: ${{ secrets.GEMINI_API }}
+          GAS: ${{ secrets.GAS }}
+        run: 
+          python Podcast_BN.py
