@@ -1,0 +1,31 @@
+name: RSSP
+on:
+  workflow_dispatch: 
+  schedule:
+    - cron: '0 4 * * *'
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'  
+      - name: Execute Python dependency
+        run: |
+          python -m pip uninstall -r req233.txt &&
+          python -m pip cache purge &&
+          brew install ffmpeg &&
+          python -m pip install --upgrade pip setuptools &&
+          python -m pip install -r req233.txt
+      - name: Generate PDF
+        env:
+          AK: ${{ secrets.GEMINI_API }}
+          GAS: ${{ secrets.GAS }}
+        run: 
+          python Podcast_BN.py
