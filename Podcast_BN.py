@@ -2,23 +2,25 @@ import requests
 import feedparser
 from datetime import datetime
 import google.generativeai as genai
+from gtts import gTTS
 from pydub import AudioSegment
 import os
 import time
 import base64
 import random
 import glob
-from TTS.api import TTS
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbxZkxDKz6_kOsGWjNufwcw6J5YFw5gYSXFt4QxfQEqMHIAFsQRJOJtMCfkRTEH3bp3z/exec"
+
+GAS_URL = "https://script.google.com/macros/s/AKfycbzlwz0jWZDxJJN3wB8ynf54TcDSZ4LGpZN4y71lXGiCAM-cIXJqZyR0xOR1mPsannWU/exec"
 GEMINI_API_KEY = os.getenv("AK")
-MUSIC_FOLDER = "Music"  # Folder in your repo with music files
+MUSIC_FOLDER = "Music"   
 
 genai.configure(api_key=GEMINI_API_KEY)
 
+
 def fetch_rss_feeds(urls):
     all_entries = []
-    for url in set(urls):
+    for url in set(urls): 
         feed = feedparser.parse(url)
         for entry in feed.entries:
             summary = entry.get("summary") or entry.get("description") or "No summary available"
@@ -28,6 +30,7 @@ def fetch_rss_feeds(urls):
                 "summary": summary,
             })
     return all_entries
+
 
 def retry_request(func, retries=3, delay=2):
     for attempt in range(retries):
@@ -39,6 +42,7 @@ def retry_request(func, retries=3, delay=2):
                 time.sleep(delay)
             else:
                 raise
+
 
 def get_podcast_script(news_text):
     def request_gemini():
@@ -66,36 +70,38 @@ def get_podcast_script(news_text):
 
     return retry_request(request_gemini)
 
+
 def generate_podcast_audio(script_text, filename, music_folder=MUSIC_FOLDER):
     def tts_job():
-        # Use Indian-accent voice from Coqui TTS
-        tts = TTS(model_name="tts_models/en/ek1/tacotron2-DDC", progress_bar=False, gpu=False)
-
-        max_len = 4500
+        max_len = 4500  
         chunks = [script_text[i:i + max_len] for i in range(0, len(script_text), max_len)]
 
         final_audio = AudioSegment.silent(duration=0)
         for idx, chunk in enumerate(chunks):
-            temp_file = f"chunk_{idx}.wav"
-            tts.tts_to_file(text=chunk, file_path=temp_file)
-            final_audio += AudioSegment.from_wav(temp_file)
+            temp_file = f"chunk_{idx}.mp3"
+            gTTS(text=chunk, lang="en-IN", tld="co.in", slow=False).save(temp_file)
+            final_audio += AudioSegment.from_mp3(temp_file)
             os.remove(temp_file)
 
-        # Overlay background music
         music_files = glob.glob(os.path.join(music_folder, "*.mp3"))
         if music_files:
             bg_file = random.choice(music_files)
             print(f"🎶 Using background track: {bg_file}")
-            bg_music = AudioSegment.from_mp3(bg_file) - 19
+
+            bg_music = AudioSegment.from_mp3(bg_file)
+            bg_music = bg_music - 19  
+
             if len(bg_music) < len(final_audio):
                 repeat_count = (len(final_audio) // len(bg_music)) + 1
                 bg_music = bg_music * repeat_count
+
             bg_music = bg_music[:len(final_audio)]
             final_audio = final_audio.overlay(bg_music)
 
         final_audio.export(filename, format="mp3")
 
     retry_request(tts_job)
+
 
 if not GEMINI_API_KEY:
     raise ValueError("❌ GEMINI_API_KEY is missing. Set it in your environment variables.")
@@ -117,6 +123,7 @@ rss_urls = [
 "https://www.goodreturns.in/rss/feeds/news-fb.xml",
 "https://www.goodreturns.in/rss/feeds/business-news-fb.xml"
 ]
+
 entries = fetch_rss_feeds(rss_urls)
 entries_text = "\n".join(
     f"{entry.get('title', '')}\n{entry.get('summary', '')}"
@@ -129,6 +136,7 @@ if not podcast_script:
     raise ValueError("❌ Gemini returned an empty podcast script")
 
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
 transcript_file = f"podcast_transcript_{timestamp}.txt"
 with open(transcript_file, "w", encoding="utf-8") as f:
     f.write(podcast_script)
@@ -138,7 +146,6 @@ podcast_file = f"podcast_{timestamp}.mp3"
 generate_podcast_audio(podcast_script, podcast_file, music_folder=MUSIC_FOLDER)
 print(f"🎙 Podcast saved as {podcast_file}")
 
-# Upload to Google Apps Script
 with open(podcast_file, "rb") as mp3_f:
     b64_audio = base64.b64encode(mp3_f.read()).decode("utf-8")
 
@@ -155,3 +162,4 @@ try:
     print("📤 GAS Upload Success:", response.text)
 except Exception as e:
     print("❌ Failed to upload to GAS:", e)
+            
