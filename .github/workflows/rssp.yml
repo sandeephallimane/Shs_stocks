@@ -26,12 +26,12 @@ jobs:
       - name: Generate PDF
         env:
           AK: ${{ secrets.GEMINI_API }}
-          GAS: ${{ secrets.GAS }}
+          GAS: ${{ secrets.GAS1 }}
         run: 
           python Podcast_news.py
       - name: Generate PDF2
         env:
           AK: ${{ secrets.GEMINI_API }}
-          GAS: ${{ secrets.GAS }}
+          GAS: ${{ secrets.GAS1 }}
         run: 
           python Podcast_BN.py
