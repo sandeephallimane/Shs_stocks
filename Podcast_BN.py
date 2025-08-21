@@ -11,7 +11,7 @@ import random
 import glob
 
 
-GAS_URL = "https://script.google.com/macros/s/AKfycbw5dYBg1OKrRJ7clihGcTYNyJ22IOZgnjORBkVlHnEZw0MI5MIpgMy7fH6dni3d2faF/exec"
+GAS_URL = "https://script.google.com/macros/s/AKfycbwWkaUoU8EQMoyIrvDQwfnRfgG1rk6QEtK8SECH745kZVJ25uLMCBDVT9DenXXc1oSq/exec"
 GEMINI_API_KEY = os.getenv("AK")
 MUSIC_FOLDER = "Music"   
 
