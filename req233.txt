@@ -1,0 +1,13 @@
+google-generativeai
+requests
+datetime
+feedparser
+bs4
+htmlmin
+markdown 
+pygments
+gtts
+pydub
+coqui-tts
+soundfile       
+numpy 
