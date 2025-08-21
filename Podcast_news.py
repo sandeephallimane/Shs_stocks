@@ -71,33 +71,29 @@ def get_podcast_script(news_text):
 
 
 def generate_podcast_audio(script_text, filename, music_folder=MUSIC_FOLDER):
-    """Generate TTS audio from podcast script, overlay with random background music."""
     def tts_job():
-        max_len = 4500  # gTTS text limit
+        max_len = 4500  
         chunks = [script_text[i:i + max_len] for i in range(0, len(script_text), max_len)]
 
         final_audio = AudioSegment.silent(duration=0)
         for idx, chunk in enumerate(chunks):
             temp_file = f"chunk_{idx}.mp3"
-            gTTS(text=chunk, lang="en", slow=False).save(temp_file)
+            gTTS(text=chunk, lang="en-IN", tld="co.in", slow=False).save(temp_file)
             final_audio += AudioSegment.from_mp3(temp_file)
             os.remove(temp_file)
 
-        # 🎵 Pick random background music from repo
         music_files = glob.glob(os.path.join(music_folder, "*.mp3"))
         if music_files:
             bg_file = random.choice(music_files)
             print(f"🎶 Using background track: {bg_file}")
 
             bg_music = AudioSegment.from_mp3(bg_file)
-            bg_music = bg_music - 20  # lower volume
+            bg_music = bg_music - 19  
 
-            # Loop bg music if shorter than narration
             if len(bg_music) < len(final_audio):
                 repeat_count = (len(final_audio) // len(bg_music)) + 1
                 bg_music = bg_music * repeat_count
 
-            # Match length and overlay
             bg_music = bg_music[:len(final_audio)]
             final_audio = final_audio.overlay(bg_music)
 
@@ -106,7 +102,6 @@ def generate_podcast_audio(script_text, filename, music_folder=MUSIC_FOLDER):
     retry_request(tts_job)
 
 
-# === MAIN ===
 if not GEMINI_API_KEY:
     raise ValueError("❌ GEMINI_API_KEY is missing. Set it in your environment variables.")
 
