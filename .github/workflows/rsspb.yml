@@ -28,4 +28,4 @@ jobs:
           AK: ${{ secrets.GEMINI_API }}
           GAS: ${{ secrets.GAS }}
         run: 
-          python Podcast_BN.py
+          python P_N.py
