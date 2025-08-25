@@ -72,6 +72,8 @@ def get_podcast_script(news_text):
             "- Use natural transitions, no bullet lists.\n"
             "- Use '.........' to mark short pauses for pacing.\n"
             "- Highlight different sections.\n"
+            "- Remove repeated news content and content that lacks full information.\n"  
+            "- keep numbes in text format.\n"  
             "- Output ONLY the spoken script, no labels, commentary, or formatting.\n\n"
             f"News text to base the script on:\n{news_text}"
         )
@@ -101,7 +103,7 @@ def generate_podcast_audio(script_text, filename, music_folder=MUSIC_FOLDER):
             print(f"🎶 Using background track: {bg_file}")
 
             bg_music = AudioSegment.from_mp3(bg_file)
-            bg_music = bg_music - 19  
+            bg_music = bg_music - 18  
 
             if len(bg_music) < len(final_audio):
                 repeat_count = (len(final_audio) // len(bg_music)) + 1
