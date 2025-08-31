@@ -28,7 +28,7 @@ jobs:
           AK: ${{ secrets.GEMINI_API }}
           GAS: ${{ secrets.GAS1 }}
         run: 
-          python Podcast_news.py
+          python Pnedge.py
       - name: Generate PDF2
         env:
           AK: ${{ secrets.GEMINI_API }}
