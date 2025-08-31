@@ -9,7 +9,13 @@ import time
 import base64
 import random
 import glob
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
+ist = ZoneInfo("Asia/Kolkata")
+now_ist = datetime.now(ist)
+
+today_date_day = now_ist.strftime("%Y-%m-%d - %A")
 
 GAS_URL = os.getenv("GAS")
 GEMINI_API_KEY = os.getenv("AK")
@@ -67,7 +73,7 @@ def get_podcast_script(news_text):
             "for a single reader to read aloud using text-to-speech.\n\n"
             "Instructions:\n"
             "- Tone: Friendly, witty, conversational, yet informative.\n"
-            "- Begin with a warm welcome and mention today's date.\n"
+            f"Begin with a warm welcome and mention: {today_date_day}\n"
             "- smooth-flowing between sections.\n"
             "- Use natural transitions, no bullet lists.\n"
             "- Use '.........' to mark short pauses for pacing.\n"
