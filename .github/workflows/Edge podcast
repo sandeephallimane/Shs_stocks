@@ -1,4 +1,4 @@
-name: edge-podcast
+name: edge
 on:
   workflow_dispatch: 
   schedule:
