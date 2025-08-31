@@ -1,4 +1,4 @@
-import os
+frommort os
 import time
 import glob
 import base64
@@ -77,6 +77,7 @@ def request_geminis(news_text):
         "- Exclude irrelevant, duplicate, or incomplete stories.\n"
         "- Exclude film, entertainment, and sports.\n"
         "- Organize into sections: India, Global, Business & Economy, Science & Tech, Other.\n"
+        "- At the end, include a \"Did You Know?\" section with two randomly chosen terms from the text. Provide a simple explanation for each.\n\n"
         "- Output structured text for further use.\n\n"
         f"Text:\n{news_text}"
     )
