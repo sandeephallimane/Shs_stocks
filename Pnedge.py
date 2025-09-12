@@ -83,7 +83,7 @@ def request_geminis(news_text):
     )
     model = genai.GenerativeModel("models/gemini-2.0-flash")
     resp = model.generate_content(query)
-    return resp.text.strip()
+    return (resp.text.strip()).replace("*"," ")
 
 
 def get_podcast_script(news_summary):
@@ -104,9 +104,9 @@ def get_podcast_script(news_summary):
             "- Output ONLY the spoken script.\n\n"
             f"Summarized news:\n{news_summary}"
         )
-        model = genai.GenerativeModel("models/gemini-2.0-flash")
+        model = genai.GenerativeModel("models/gemini-2.5-pro")
         resp = model.generate_content(query)
-        return resp.text.strip()
+        return (resp.text.strip()).replace("*"," ")
 
     return retry_request(request_script)
 
